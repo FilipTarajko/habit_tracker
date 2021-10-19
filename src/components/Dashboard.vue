@@ -14,7 +14,8 @@
         <td>{{ habit.name }}</td>
         <!-- Before started -->
         <td
-          v-for="index2 in (habit.startDay - firstDisplayedDate) / 86400000"
+          v-for="index2 in Math.max(habit.startDay - firstDisplayedDate, 0) /
+            86400000"
           :key="'B' + index2"
         >
           -
@@ -32,37 +33,19 @@
           <v-icon v-if="!(date in habit.records)" color="#444444"
             >mdi-help</v-icon
           >
-          <!-- ZWYKLE -->
+          <!-- TICK -->
           <v-icon
-            v-if="
-              !settings.useThick && date in habit.records && habit.records[date]
-            "
+            v-if="date in habit.records && habit.records[date]"
             color="green darken-2"
-            >mdi-check</v-icon
+            >{{ settings.useThick ? "mdi-check-bold" : "mdi-check" }}</v-icon
           >
+          <!-- CROSS -->
           <v-icon
-            v-if="
-              !settings.useThick &&
-                date in habit.records &&
-                !habit.records[date]
-            "
+            v-if="date in habit.records && !habit.records[date]"
             color="red darken-2"
-            >mdi-window-close</v-icon
-          >
-          <!-- THICK -->
-          <v-icon
-            v-if="
-              settings.useThick && date in habit.records && habit.records[date]
-            "
-            color="green darken-2"
-            >mdi-check-bold</v-icon
-          >
-          <v-icon
-            v-if="
-              settings.useThick && date in habit.records && !habit.records[date]
-            "
-            color="red darken-2"
-            >mdi-close-thick</v-icon
+            >{{
+              settings.useThick ? "mdi-close-thick" : "mdi-window-close"
+            }}</v-icon
           >
         </td>
         <!-- After started old -->
@@ -91,7 +74,8 @@ export default {
     stuff: [],
     currentDate: new Date(),
     settings: {
-      useThick: true,
+      useThick: false,
+      displayedDays: 6,
     },
   }),
   methods: {
@@ -151,12 +135,11 @@ export default {
   },
   computed: {
     firstDisplayedDate: function() {
-      // console.log(new Date("2021-10-05"));
-      // return new Date("2021-10-05");
-
       console.log("-days");
       let a = new Date(
-        new Date(new Date() - 86400000 * 6).toISOString().substring(0, 10)
+        new Date(new Date() - 86400000 * (this.settings.displayedDays - 1))
+          .toISOString()
+          .substring(0, 10)
       );
       console.log("a");
       console.log(a);
