@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(habit, index) in stuff" :key="'A' + index">
+        <tr v-for="(habit, index) in stuff" :key="index + 'A' + reloads.table">
           <!-- Habit name -->
           <td>{{ habit.name }}</td>
           <!-- Before started -->
@@ -36,7 +36,11 @@
             )"
             :key="'fd' + index"
           >
-            <div v-if="new Date(date) <= new Date()" style="cursor: pointer;">
+            <div
+              v-if="new Date(date) <= new Date()"
+              style="cursor: pointer;"
+              @click="changeStatus(habit, date)"
+            >
               <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
               <v-icon v-if="!(date in habit.records)" color="#444444"
                 >mdi-square-rounded-outline</v-icon
@@ -118,8 +122,19 @@ export default {
       displayedDays: 8,
       daysAgo: 0,
     },
+    reloads: {
+      table: 1,
+    },
   }),
   methods: {
+    changeStatus: function(habit, date) {
+      if (habit.records[date]) {
+        habit.records[date] = false;
+      } else {
+        habit.records[date] = true;
+      }
+      this.reloads.table += 1;
+    },
     loadData: function() {
       this.stuff.push(
         {
