@@ -75,7 +75,6 @@
         </tr>
       </tbody>
     </table>
-
     <v-col cols="12" sm="6">
       <v-switch v-model="settings.useThick" label="Use thick icons"></v-switch>
       <v-text-field
@@ -88,16 +87,14 @@
         "
         type="number"
       ></v-text-field>
-      <v-text-field
-        label="Displayed days"
-        persistent-hint
+      <v-slider
         v-model="settings.displayedDays"
-        outlined
-        :hint="
-          'Exactly ' + settings.displayedDays + ' days will be shown at once'
-        "
-        type="number"
-      ></v-text-field>
+        :max="10"
+        :min="1"
+        step="1"
+        persistent-hint
+        :label="'Displayed days: ' + settings.displayedDays"
+      ></v-slider>
     </v-col>
   </div>
 </template>
@@ -143,6 +140,7 @@ export default {
           dayRecords: [300, 4],
           records: {
             "2021-10-13": true,
+            "2021-10-14": false,
             "2021-10-15": true,
             "2021-10-16": true,
           },
@@ -214,7 +212,6 @@ export default {
       return dates;
     },
   },
-  watch: {},
 };
 </script>
 
