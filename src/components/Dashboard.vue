@@ -36,7 +36,7 @@
             )"
             :key="'fd' + index"
           >
-            <div v-if="new Date(date) <= new Date()">
+            <div v-if="new Date(date) <= new Date()" style="cursor: pointer;">
               <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
               <v-icon v-if="!(date in habit.records)" color="#444444"
                 >mdi-square-rounded-outline</v-icon
