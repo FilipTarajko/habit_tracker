@@ -3,7 +3,11 @@
     <thead>
       <tr>
         <th></th>
-        <th v-for="(date, index) in daysList" :key="index">
+        <th
+          v-for="(date, index) in daysList"
+          :key="index"
+          class="widthControlledCell"
+        >
           {{ date }}
         </th>
       </tr>
@@ -14,14 +18,18 @@
         <td>{{ habit.name }}</td>
         <!-- Before started -->
         <td
-          v-for="index2 in Math.max(habit.startDay - firstDisplayedDate, 0) /
-            86400000"
+          v-for="index2 in Math.min(
+            Math.max(habit.startDay - firstDisplayedDate, 0) / 86400000,
+            settings.displayedDays
+          )"
           :key="'B' + index2"
+          class="widthControlledCell"
         >
           -
         </td>
         <!-- After started new -->
         <td
+          class="widthControlledCell"
           v-for="(date, index) in fullDaysList(
             habit.startDay > firstDisplayedDate
               ? habit.startDay
@@ -75,7 +83,8 @@ export default {
     currentDate: new Date(),
     settings: {
       useThick: false,
-      displayedDays: 6,
+      displayedDays: 8,
+      daysAgo: 0,
     },
   }),
   methods: {
@@ -117,7 +126,7 @@ export default {
     fullDaysList: function(sinceDate) {
       let iDate = new Date(sinceDate);
       let dates = [];
-      while (iDate < this.currentDate) {
+      while (iDate <= this.lastDisplayedDate) {
         dates.push(
           iDate.getFullYear() +
             "-" +
@@ -134,26 +143,41 @@ export default {
     this.loadData();
   },
   computed: {
-    firstDisplayedDate: function() {
-      console.log("-days");
-      let a = new Date(
-        new Date(new Date() - 86400000 * (this.settings.displayedDays - 1))
+    lastDisplayedDate: function() {
+      console.log("lastDisplayedDate");
+      let lastDate = new Date(
+        new Date(new Date() - 86400000 * this.settings.daysAgo)
           .toISOString()
           .substring(0, 10)
       );
-      console.log("a");
+      console.log(lastDate);
+      return lastDate;
+    },
+    firstDisplayedDate: function() {
+      console.log("firstDisplayedDate");
+      let a = new Date(
+        new Date(
+          new Date() -
+            86400000 * (this.settings.displayedDays - 1 + this.settings.daysAgo)
+        )
+          .toISOString()
+          .substring(0, 10)
+      );
       console.log(a);
       return a;
     },
     daysList: function() {
       let iDate = new Date(this.firstDisplayedDate.valueOf());
       let dates = [];
-      while (iDate < this.currentDate) {
-        dates.push(iDate.getMonth() + 1 + "-" + iDate.getDate());
+      while (iDate <= this.lastDisplayedDate) {
+        // display month as well
+        //dates.push(iDate.getMonth() + 1 + "-" + iDate.getDate());
+        // only display day
+        dates.push(iDate.getDate());
         iDate.setDate(iDate.getDate() + 1);
       }
-      dates.pop();
-      dates.push("today");
+      // dates.pop();
+      // dates.push("today");
       return dates;
     },
   },
@@ -161,6 +185,11 @@ export default {
 </script>
 
 <style scoped>
+.widthControlledCell {
+  text-align: center;
+  width: 54px;
+}
+
 .styled-table {
   border-collapse: collapse;
   margin: 25px 0;
