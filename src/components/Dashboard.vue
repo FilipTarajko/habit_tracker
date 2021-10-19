@@ -25,9 +25,7 @@
             )"
             :key="'B' + index2"
             class="widthControlledCell"
-          >
-            -
-          </td>
+          ></td>
           <!-- After started new -->
           <td
             class="widthControlledCell"
@@ -38,24 +36,35 @@
             )"
             :key="'fd' + index"
           >
-            <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
-            <v-icon v-if="!(date in habit.records)" color="#444444"
-              >mdi-help</v-icon
-            >
-            <!-- TICK -->
-            <v-icon
-              v-if="date in habit.records && habit.records[date]"
-              color="green darken-2"
-              >{{ settings.useThick ? "mdi-check-bold" : "mdi-check" }}</v-icon
-            >
-            <!-- CROSS -->
-            <v-icon
-              v-if="date in habit.records && !habit.records[date]"
-              color="red darken-2"
-              >{{
-                settings.useThick ? "mdi-close-thick" : "mdi-window-close"
-              }}</v-icon
-            >
+            <div v-if="new Date(date) <= new Date()">
+              <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
+              <v-icon v-if="!(date in habit.records)" color="#444444"
+                >mdi-square-rounded-outline</v-icon
+              >
+              <!-- help / checkbox-blank-outline / square-outline / square-rounded-outline ... might be better? -->
+              <!-- TICK -->
+              <v-icon
+                v-if="date in habit.records && habit.records[date]"
+                color="green darken-2"
+                >{{
+                  settings.useThick ? "mdi-check-bold" : "mdi-check"
+                }}</v-icon
+              >
+              <!-- CROSS -->
+              <v-icon
+                v-if="date in habit.records && !habit.records[date]"
+                color="red darken-2"
+                >{{
+                  settings.useThick ? "mdi-close-thick" : "mdi-window-close"
+                }}</v-icon
+              >
+            </div>
+            <div v-if="new Date(date) > new Date()">
+              <!-- Future -->
+              <!-- <v-icon v-if="!(date in habit.records)" color="#444444"
+                >mdi-minus</v-icon
+              > -->
+            </div>
           </td>
           <!-- After started old -->
           <!-- <td v-for="(cell, index2) in habit.dayRecords" :key="'C' + index2">
@@ -137,12 +146,68 @@ export default {
         {
           name: "ponosić biszkopta w pyszczku",
           startDay: new Date("2021-10-13"),
-          dayRecords: [300, 4],
+          dayRecords: [2, 3],
           records: {
             "2021-10-13": true,
             "2021-10-14": false,
             "2021-10-15": true,
             "2021-10-16": true,
+          },
+        },
+        {
+          name: "zeżreć puchę karmy",
+          startDay: new Date("2021-10-13"),
+          dayRecords: [1, 1],
+          records: {
+            "2021-10-13": true,
+            "2021-10-14": true,
+            "2021-10-15": true,
+            "2021-10-16": true,
+            "2021-10-17": true,
+            "2021-10-18": true,
+            "2021-10-19": true,
+          },
+        },
+        {
+          name: "być grzecznym",
+          startDay: new Date("2021-10-13"),
+          dayRecords: [1, 1],
+          records: {
+            "2021-10-13": false,
+            "2021-10-14": false,
+            "2021-10-15": false,
+            "2021-10-16": false,
+            "2021-10-17": false,
+            "2021-10-18": false,
+            "2021-10-19": false,
+          },
+        },
+        {
+          name: "wylizać sobie futerko",
+          startDay: new Date("2021-10-12"),
+          dayRecords: [1, 1],
+          records: {
+            "2021-10-12": true,
+            "2021-10-13": true,
+            "2021-10-14": false,
+            "2021-10-15": true,
+            "2021-10-16": true,
+            "2021-10-17": false,
+            "2021-10-18": true,
+            "2021-10-19": true,
+          },
+        },
+        {
+          name: "wylizać komuś innemu futerko",
+          startDay: new Date("2021-10-12"),
+          dayRecords: [1, 1],
+          records: {
+            "2021-10-12": true,
+            "2021-10-13": false,
+            "2021-10-14": true,
+            "2021-10-16": true,
+            "2021-10-18": false,
+            "2021-10-19": true,
           },
         }
       );
