@@ -1,79 +1,105 @@
 <template>
-  <table class="styled-table">
-    <thead>
-      <tr>
-        <th></th>
-        <th
-          v-for="(date, index) in daysList"
-          :key="index"
-          class="widthControlledCell"
-        >
-          {{ date }}
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(habit, index) in stuff" :key="'A' + index">
-        <!-- Habit name -->
-        <td>{{ habit.name }}</td>
-        <!-- Before started -->
-        <td
-          v-for="index2 in Math.min(
-            Math.max(habit.startDay - firstDisplayedDate, 0) / 86400000,
-            settings.displayedDays
-          )"
-          :key="'B' + index2"
-          class="widthControlledCell"
-        >
-          -
-        </td>
-        <!-- After started new -->
-        <td
-          class="widthControlledCell"
-          v-for="(date, index) in fullDaysList(
-            habit.startDay > firstDisplayedDate
-              ? habit.startDay
-              : firstDisplayedDate
-          )"
-          :key="'fd' + index"
-        >
-          <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
-          <v-icon v-if="!(date in habit.records)" color="#444444"
-            >mdi-help</v-icon
+  <div>
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th class="widthControlledCell"></th>
+          <th
+            v-for="(date, index) in daysList"
+            :key="index"
+            class="widthControlledCell"
           >
-          <!-- TICK -->
-          <v-icon
-            v-if="date in habit.records && habit.records[date]"
-            color="green darken-2"
-            >{{ settings.useThick ? "mdi-check-bold" : "mdi-check" }}</v-icon
+            {{ date }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(habit, index) in stuff" :key="'A' + index">
+          <!-- Habit name -->
+          <td>{{ habit.name }}</td>
+          <!-- Before started -->
+          <td
+            v-for="index2 in Math.min(
+              Math.max(habit.startDay - firstDisplayedDate, 0) / 86400000,
+              settings.displayedDays
+            )"
+            :key="'B' + index2"
+            class="widthControlledCell"
           >
-          <!-- CROSS -->
-          <v-icon
-            v-if="date in habit.records && !habit.records[date]"
-            color="red darken-2"
-            >{{
-              settings.useThick ? "mdi-close-thick" : "mdi-window-close"
-            }}</v-icon
+            -
+          </td>
+          <!-- After started new -->
+          <td
+            class="widthControlledCell"
+            v-for="(date, index) in fullDaysList(
+              habit.startDay > firstDisplayedDate
+                ? habit.startDay
+                : firstDisplayedDate
+            )"
+            :key="'fd' + index"
           >
-        </td>
-        <!-- After started old -->
-        <!-- <td v-for="(cell, index2) in habit.dayRecords" :key="'C' + index2">
-          {{ cell }}
-        </td>
-        <td
-          v-for="index2 in Math.ceil(
-            (currentDate -
-              habit.startDay -
-              habit.dayRecords.length * 86400000) /
-              86400000
-          )"
-          :key="'D' + index2"
-        >
-          -
-        </td> -->
-      </tr>
-    </tbody>
-  </table>
+            <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
+            <v-icon v-if="!(date in habit.records)" color="#444444"
+              >mdi-help</v-icon
+            >
+            <!-- TICK -->
+            <v-icon
+              v-if="date in habit.records && habit.records[date]"
+              color="green darken-2"
+              >{{ settings.useThick ? "mdi-check-bold" : "mdi-check" }}</v-icon
+            >
+            <!-- CROSS -->
+            <v-icon
+              v-if="date in habit.records && !habit.records[date]"
+              color="red darken-2"
+              >{{
+                settings.useThick ? "mdi-close-thick" : "mdi-window-close"
+              }}</v-icon
+            >
+          </td>
+          <!-- After started old -->
+          <!-- <td v-for="(cell, index2) in habit.dayRecords" :key="'C' + index2">
+            {{ cell }}
+          </td>
+          <td
+            v-for="index2 in Math.ceil(
+              (currentDate -
+                habit.startDay -
+                habit.dayRecords.length * 86400000) /
+                86400000
+            )"
+            :key="'D' + index2"
+          >
+            -
+          </td> -->
+        </tr>
+      </tbody>
+    </table>
+
+    <v-col cols="12" sm="6">
+      <v-switch v-model="settings.useThick" label="Use thick icons"></v-switch>
+      <v-text-field
+        label="Days ago"
+        persistent-hint
+        v-model="settings.daysAgo"
+        outlined
+        :hint="
+          'last displayed day will be set to ' + settings.daysAgo + ' days ago'
+        "
+        type="number"
+      ></v-text-field>
+      <v-text-field
+        label="Displayed days"
+        persistent-hint
+        v-model="settings.displayedDays"
+        outlined
+        :hint="
+          'Exactly ' + settings.displayedDays + ' days will be shown at once'
+        "
+        type="number"
+      ></v-text-field>
+    </v-col>
+  </div>
 </template>
 
 <script>
@@ -144,27 +170,34 @@ export default {
   },
   computed: {
     lastDisplayedDate: function() {
-      console.log("lastDisplayedDate");
       let lastDate = new Date(
         new Date(new Date() - 86400000 * this.settings.daysAgo)
           .toISOString()
           .substring(0, 10)
       );
+      console.log("lastDisplayedDate: ");
       console.log(lastDate);
       return lastDate;
     },
     firstDisplayedDate: function() {
-      console.log("firstDisplayedDate");
-      let a = new Date(
+      console.log("typeof daysAgo");
+      console.log(typeof this.settings.daysAgo);
+      let firstDate = new Date(
         new Date(
           new Date() -
-            86400000 * (this.settings.displayedDays - 1 + this.settings.daysAgo)
+            86400000 *
+              (this.settings.displayedDays -
+                1 +
+                parseInt(this.settings.daysAgo))
         )
           .toISOString()
           .substring(0, 10)
       );
-      console.log(a);
-      return a;
+      console.log("firstDisplayedDate");
+      console.log(firstDate);
+      console.log("this.settings.displayedDays - 1 + this.settings.daysAgo");
+      console.log(this.settings.displayedDays - 1 + this.settings.daysAgo);
+      return firstDate;
     },
     daysList: function() {
       let iDate = new Date(this.firstDisplayedDate.valueOf());
@@ -181,13 +214,15 @@ export default {
       return dates;
     },
   },
+  watch: {},
 };
 </script>
 
 <style scoped>
 .widthControlledCell {
   text-align: center;
-  width: 54px;
+  min-width: 54px;
+  min-height: 50px;
 }
 
 .styled-table {
@@ -195,7 +230,7 @@ export default {
   margin: 25px 0;
   font-size: 1em;
   font-family: sans-serif;
-  min-width: 400px;
+  min-width: 250px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }
 
