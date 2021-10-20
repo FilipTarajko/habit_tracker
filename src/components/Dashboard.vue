@@ -91,17 +91,21 @@
         </tr>
       </tbody>
     </table>
-    <v-col cols="12" sm="6">
-      <v-switch v-model="settings.useThick" label="Use thick icons"></v-switch>
+    <v-col v-if="this.loaded" cols="12" sm="6">
+      <v-switch
+        v-model="settings.useThick"
+        label="Use thick icons"
+        @change="updateSettings"
+      ></v-switch>
       <v-text-field
         label="Days ago"
         persistent-hint
         v-model="settings.daysAgo"
-        outlined
         :hint="
           'last displayed day will be set to ' + settings.daysAgo + ' days ago'
         "
         type="number"
+        @change="updateSettings"
       ></v-text-field>
       <v-slider
         v-model="settings.displayedDays"
@@ -110,6 +114,7 @@
         step="1"
         persistent-hint
         :label="'Displayed days: ' + settings.displayedDays"
+        @change="updateSettings"
       ></v-slider>
     </v-col>
   </div>
@@ -121,16 +126,15 @@ export default {
     loaded: false,
     habits: [],
     currentDate: new Date(),
-    settings: {
-      useThick: false,
-      displayedDays: 8,
-      daysAgo: 0,
-    },
+    settings: {},
     reloads: {
       table: 1,
     },
   }),
   methods: {
+    updateSettings: function() {
+      localStorage.setItem("settings", JSON.stringify(this.settings));
+    },
     refreshAndUpdate: function() {
       this.reloads.table += 1;
       localStorage.setItem("habits", JSON.stringify(this.habits));
@@ -144,6 +148,14 @@ export default {
       this.refreshAndUpdate();
     },
     loadData: function() {
+      let storedSettings = localStorage.getItem("settings");
+      if (storedSettings) {
+        this.settings = JSON.parse(storedSettings);
+      } else {
+        this.settings.useThick = false;
+        this.settings.displayedDays = 8;
+        this.settings.daysAgo = 0;
+      }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
         this.habits = JSON.parse(storedHabits);
@@ -328,7 +340,7 @@ export default {
 .widthControlledCell {
   text-align: center;
   min-width: 54px;
-  min-height: 50px;
+  height: 50px;
 }
 
 .styled-table {
