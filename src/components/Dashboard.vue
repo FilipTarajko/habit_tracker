@@ -91,7 +91,7 @@
         </tr>
       </tbody>
     </table>
-    <v-col v-if="this.loaded" cols="12" sm="6">
+    <div v-if="this.loaded" id="settingsDiv">
       <v-switch
         v-model="settings.useThick"
         label="Use thick icons"
@@ -116,7 +116,21 @@
         :label="'Displayed days: ' + settings.displayedDays"
         @change="updateSettings"
       ></v-slider>
-    </v-col>
+      <v-container>
+        <v-row>
+          <v-text-field
+            id="newHabitNameInput"
+            label="Add a new habit"
+            persistent-hint
+          ></v-text-field>
+          <v-btn
+            @click="addNewHabit"
+            style="margin-top: 16px; margin-left: 16px;"
+            >add habit</v-btn
+          >
+        </v-row>
+      </v-container>
+    </div>
   </div>
 </template>
 
@@ -132,6 +146,13 @@ export default {
     },
   }),
   methods: {
+    addNewHabit: function() {
+      this.habits.push({
+        name: document.getElementById("newHabitNameInput").value,
+        startDay: new Date(new Date().toISOString().substring(0, 10)),
+        records: {},
+      });
+    },
     updateSettings: function() {
       localStorage.setItem("settings", JSON.stringify(this.settings));
     },
@@ -337,6 +358,15 @@ export default {
 </script>
 
 <style scoped>
+#settingsDiv {
+  max-width: 600px;
+  margin-left: calc(50% - 300px);
+  padding: 20px;
+  border: 1px solid #22aadd;
+  border-radius: 12px;
+  background: #effbfd;
+}
+
 .widthControlledCell {
   text-align: center;
   min-width: 54px;
