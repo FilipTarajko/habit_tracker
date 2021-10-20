@@ -1,6 +1,6 @@
 <template>
   <div>
-    <table class="styled-table">
+    <table v-if="loaded" class="styled-table">
       <thead>
         <tr>
           <th class="widthControlledCell"></th>
@@ -14,13 +14,16 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(habit, index) in stuff" :key="index + 'A' + reloads.table">
+        <tr v-for="(habit, index) in habits" :key="index + 'A' + reloads.table">
           <!-- Habit name -->
           <td>{{ habit.name }}</td>
           <!-- Before started -->
           <td
             v-for="index2 in Math.min(
-              Math.max(habit.startDay - firstDisplayedDate, 0) / 86400000,
+              Math.max(
+                new Date(habit.startDay) - new Date(firstDisplayedDate),
+                0
+              ) / 86400000,
               settings.displayedDays
             )"
             :key="'B' + index2"
@@ -30,9 +33,9 @@
           <td
             class="widthControlledCell"
             v-for="(date, index) in fullDaysList(
-              habit.startDay > firstDisplayedDate
-                ? habit.startDay
-                : firstDisplayedDate
+              new Date(habit.startDay) > new Date(firstDisplayedDate)
+                ? new Date(habit.startDay)
+                : new Date(firstDisplayedDate)
             )"
             :key="'fd' + index"
           >
@@ -115,7 +118,8 @@
 <script>
 export default {
   data: () => ({
-    stuff: [],
+    loaded: false,
+    habits: [],
     currentDate: new Date(),
     settings: {
       useThick: false,
@@ -127,107 +131,129 @@ export default {
     },
   }),
   methods: {
+    refreshAndUpdate: function() {
+      this.reloads.table += 1;
+      localStorage.setItem("habits", JSON.stringify(this.habits));
+    },
     changeStatus: function(habit, date) {
       if (habit.records[date]) {
         habit.records[date] = false;
       } else {
         habit.records[date] = true;
       }
-      this.reloads.table += 1;
+      this.refreshAndUpdate();
     },
     loadData: function() {
-      this.stuff.push(
-        {
-          name: "powygrzewać się na słoneczku",
-          startDay: new Date("2021-10-12"),
-          dayRecords: [5, 6, 8],
-          records: {
-            "2021-10-12": true,
-            "2021-10-15": true,
-            "2021-10-17": true,
-            "2021-10-18": false,
+      let storedHabits = localStorage.getItem("habits");
+      if (storedHabits) {
+        this.habits = JSON.parse(storedHabits);
+        console.log("from localData:");
+        console.log(this.habits);
+        console.log("length from localData:");
+        console.log(this.habits.length);
+        console.log("stringified from localData: ");
+        console.log(JSON.stringify(this.habits));
+      } else {
+        console.log("no data found in localstorage!");
+        this.habits.push(
+          {
+            name: "powygrzewać się na słoneczku",
+            startDay: new Date("2021-10-12"),
+            dayRecords: [5, 6, 8],
+            records: {
+              "2021-10-12": true,
+              "2021-10-15": true,
+              "2021-10-17": true,
+              "2021-10-18": false,
+            },
           },
-        },
-        {
-          name: "wejść w pudełko",
-          startDay: new Date("2021-10-13"),
-          dayRecords: [3, 4, 6],
-          records: {
-            "2021-10-13": true,
-            "2021-10-14": true,
-            "2021-10-15": true,
+          {
+            name: "wejść w pudełko",
+            startDay: new Date("2021-10-13"),
+            dayRecords: [3, 4, 6],
+            records: {
+              "2021-10-13": true,
+              "2021-10-14": true,
+              "2021-10-15": true,
+            },
           },
-        },
-        {
-          name: "ponosić biszkopta w pyszczku",
-          startDay: new Date("2021-10-13"),
-          dayRecords: [2, 3],
-          records: {
-            "2021-10-13": true,
-            "2021-10-14": false,
-            "2021-10-15": true,
-            "2021-10-16": true,
+          {
+            name: "ponosić biszkopta w pyszczku",
+            startDay: new Date("2021-10-13"),
+            dayRecords: [2, 3],
+            records: {
+              "2021-10-13": true,
+              "2021-10-14": false,
+              "2021-10-15": true,
+              "2021-10-16": true,
+            },
           },
-        },
-        {
-          name: "zeżreć puchę karmy",
-          startDay: new Date("2021-10-13"),
-          dayRecords: [1, 1],
-          records: {
-            "2021-10-13": true,
-            "2021-10-14": true,
-            "2021-10-15": true,
-            "2021-10-16": true,
-            "2021-10-17": true,
-            "2021-10-18": true,
-            "2021-10-19": true,
+          {
+            name: "zeżreć puchę karmy",
+            startDay: new Date("2021-10-13"),
+            dayRecords: [1, 1],
+            records: {
+              "2021-10-13": true,
+              "2021-10-14": true,
+              "2021-10-15": true,
+              "2021-10-16": true,
+              "2021-10-17": true,
+              "2021-10-18": true,
+              "2021-10-19": true,
+            },
           },
-        },
-        {
-          name: "być grzecznym",
-          startDay: new Date("2021-10-13"),
-          dayRecords: [1, 1],
-          records: {
-            "2021-10-13": false,
-            "2021-10-14": false,
-            "2021-10-15": false,
-            "2021-10-16": false,
-            "2021-10-17": false,
-            "2021-10-18": false,
-            "2021-10-19": false,
+          {
+            name: "być grzecznym",
+            startDay: new Date("2021-10-13"),
+            dayRecords: [1, 1],
+            records: {
+              "2021-10-13": true,
+              "2021-10-14": true,
+              "2021-10-15": false,
+              "2021-10-16": false,
+              "2021-10-17": false,
+              "2021-10-18": false,
+              "2021-10-19": false,
+            },
           },
-        },
-        {
-          name: "wylizać sobie futerko",
-          startDay: new Date("2021-10-12"),
-          dayRecords: [1, 1],
-          records: {
-            "2021-10-12": true,
-            "2021-10-13": true,
-            "2021-10-14": false,
-            "2021-10-15": true,
-            "2021-10-16": true,
-            "2021-10-17": false,
-            "2021-10-18": true,
-            "2021-10-19": true,
+          {
+            name: "wylizać sobie futerko",
+            startDay: new Date("2021-10-12"),
+            dayRecords: [1, 1],
+            records: {
+              "2021-10-12": true,
+              "2021-10-13": true,
+              "2021-10-14": false,
+              "2021-10-15": true,
+              "2021-10-16": true,
+              "2021-10-17": false,
+              "2021-10-18": true,
+              "2021-10-19": true,
+            },
           },
-        },
-        {
-          name: "wylizać komuś innemu futerko",
-          startDay: new Date("2021-10-12"),
-          dayRecords: [1, 1],
-          records: {
-            "2021-10-12": true,
-            "2021-10-13": false,
-            "2021-10-14": true,
-            "2021-10-16": true,
-            "2021-10-18": false,
-            "2021-10-19": true,
-          },
-        }
-      );
+          {
+            name: "wylizać komuś innemu futerko",
+            startDay: new Date("2021-10-12"),
+            dayRecords: [1, 1],
+            records: {
+              "2021-10-12": true,
+              "2021-10-13": false,
+              "2021-10-14": true,
+              "2021-10-16": true,
+              "2021-10-18": false,
+              "2021-10-19": true,
+            },
+          }
+        );
+        console.log("pushed: ");
+        console.log(this.habits);
+        console.log("stringified pushed: ");
+        console.log(JSON.stringify(this.habits));
+      }
+      this.loaded = true;
     },
     fullDaysList: function(sinceDate) {
+      console.log("fullDaysList");
       let iDate = new Date(sinceDate);
       let dates = [];
       while (iDate <= this.lastDisplayedDate) {
@@ -245,6 +271,7 @@ export default {
   },
   mounted() {
     this.loadData();
+    console.log(JSON.stringify(this.habits));
   },
   computed: {
     lastDisplayedDate: function() {
@@ -289,6 +316,8 @@ export default {
       }
       // dates.pop();
       // dates.push("today");
+      console.log("daysList");
+      console.log(dates);
       return dates;
     },
   },
