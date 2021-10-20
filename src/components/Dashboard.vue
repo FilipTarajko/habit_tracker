@@ -1,6 +1,10 @@
 <template>
   <div>
-    <table v-if="loaded" class="styled-table">
+    <table
+      v-if="loaded"
+      class="styled-table"
+      style="margin-left: auto; margin-right: auto;"
+    >
       <thead>
         <tr>
           <th class="widthControlledCell"></th>
@@ -16,7 +20,9 @@
       <tbody>
         <tr v-for="(habit, index) in habits" :key="index + 'A' + reloads.table">
           <!-- Habit name -->
-          <td>{{ habit.name }}</td>
+          <td @click="showHabitDetails(index)" style="cursor: pointer;">
+            {{ habit.name }}
+          </td>
           <!-- Before started -->
           <td
             v-for="index2 in Math.min(
@@ -131,14 +137,43 @@
         </v-row>
       </v-container>
     </div>
+    <!-- HABIT DETAILS V-DIALOG -->
+    <v-dialog v-model="habitDetailsDialog" width="min(80%, 600px)">
+      <v-card v-if="loaded">
+        <v-card-title class="text-h5 grey lighten-2">
+          {{
+            this.habitDetailsDialog ? this.habits[displayedHabitId].name : ""
+          }}
+          <v-icon
+            color="red"
+            style="position: absolute; right: 20px; cursor: pointer;"
+            @click="deleteHabit"
+            >mdi-delete</v-icon
+          >
+        </v-card-title>
+
+        <v-card-text style="margin-top: 16px;">
+          dzień rozpoczęcia:
+          {{
+            this.habitDetailsDialog
+              ? dateToYYYYMMDD(this.habits[displayedHabitId].startDay)
+              : ""
+          }}
+          <br />
+          dni z rzędu: TODO
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
 export default {
   data: () => ({
+    habitDetailsDialog: false,
     loaded: false,
     habits: [],
+    displayedHabitId: 0,
     currentDate: new Date(),
     settings: {},
     reloads: {
@@ -146,12 +181,25 @@ export default {
     },
   }),
   methods: {
+    deleteHabit: function() {
+      this.habits.splice(this.displayedHabitId, 1);
+      this.habitDetailsDialog = false;
+      this.refreshAndUpdate();
+    },
+    dateToYYYYMMDD: function(date) {
+      return new Date(date).toISOString().substring(0, 10);
+    },
+    showHabitDetails: function(habitIndex) {
+      this.displayedHabitId = habitIndex;
+      this.habitDetailsDialog = true;
+    },
     addNewHabit: function() {
       this.habits.push({
         name: document.getElementById("newHabitNameInput").value,
         startDay: new Date(new Date().toISOString().substring(0, 10)),
         records: {},
       });
+      this.refreshAndUpdate();
     },
     updateSettings: function() {
       localStorage.setItem("settings", JSON.stringify(this.settings));
