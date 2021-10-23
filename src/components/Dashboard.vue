@@ -160,7 +160,7 @@
               : ""
           }}
           <br />
-          dni z rzędu: TODO
+          dni z rzędu: {{ getDaysInARow(displayedHabitId) }}
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -192,6 +192,21 @@ export default {
     showHabitDetails: function(habitIndex) {
       this.displayedHabitId = habitIndex;
       this.habitDetailsDialog = true;
+    },
+    getDaysInARow: function(habitIndex) {
+      let habit = this.habits[habitIndex];
+      let daysInARow = 0;
+      console.log(habit + daysInARow);
+      while (
+        habit.records[
+          new Date(new Date() - 86400000 * daysInARow)
+            .toISOString()
+            .substring(0, 10)
+        ]
+      ) {
+        daysInARow += 1;
+      }
+      return daysInARow;
     },
     addNewHabit: function() {
       this.habits.push({
