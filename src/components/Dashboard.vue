@@ -98,11 +98,13 @@
       </tbody>
     </table>
     <div v-if="this.loaded" id="settingsDiv">
+      <!-- thick icons -->
       <v-switch
         v-model="settings.useThick"
         label="Use thick icons"
         @change="updateSettings"
       ></v-switch>
+      <!-- days ago -->
       <v-text-field
         label="Days ago"
         persistent-hint
@@ -113,6 +115,16 @@
         type="number"
         @change="updateSettings"
       ></v-text-field>
+      <v-slider
+        v-model="settings.daysAgo"
+        :max="this.getStartedDaysAgo() - settings.displayedDays + 2"
+        :min="0"
+        step="1"
+        persistent-hint
+        :label="'Days ago: ' + settings.daysAgo"
+        @change="updateSettings"
+      ></v-slider>
+      <!-- displayed days -->
       <v-slider
         v-model="settings.displayedDays"
         :max="10"
@@ -145,6 +157,7 @@
             this.habitDetailsDialog ? this.habits[displayedHabitId].name : ""
           }}
           <v-icon
+            v-if="this.habits.length > 1"
             color="red"
             style="position: absolute; right: 20px; cursor: pointer;"
             @click="deleteHabit"
@@ -181,6 +194,30 @@ export default {
     },
   }),
   methods: {
+    getStartedDaysAgo: function() {
+      let firstStartDay = Math.floor(
+        (new Date() - this.getFirstStartDay()) / 86400000
+      );
+      console.warn(firstStartDay);
+      return firstStartDay;
+    },
+    getFirstStartDay: function() {
+      let earliestStartDay = new Date();
+      for (let habit of this.habits) {
+        let checkedDate = new Date(habit.startDay);
+        console.error(checkedDate);
+        console.warn(checkedDate > earliestStartDay);
+        console.warn(checkedDate == earliestStartDay);
+        console.warn(checkedDate < earliestStartDay);
+        if (checkedDate < earliestStartDay) {
+          earliestStartDay = checkedDate;
+          console.warn(earliestStartDay);
+        }
+      }
+      console.error("earliestStartDay");
+      console.error(earliestStartDay);
+      return earliestStartDay;
+    },
     deleteHabit: function() {
       this.habits.splice(this.displayedHabitId, 1);
       this.habitDetailsDialog = false;
