@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="content">
     <table
       v-if="loaded"
       class="styled-table"
@@ -147,6 +147,12 @@
             >add habit</v-btn
           >
         </v-row>
+        <v-color-picker
+          v-model="settings.color"
+          dot-size="25"
+          swatches-max-height="200"
+          @input="updateColor"
+        ></v-color-picker>
       </v-container>
     </div>
     <!-- HABIT DETAILS V-DIALOG -->
@@ -194,28 +200,75 @@ export default {
     },
   }),
   methods: {
+    rgbToHsl: function(color) {
+      var r = parseInt(color.substr(1, 2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
+      var g = parseInt(color.substr(3, 2), 16);
+      var b = parseInt(color.substr(5, 2), 16);
+
+      (r /= 255), (g /= 255), (b /= 255);
+      var max = Math.max(r, g, b),
+        min = Math.min(r, g, b);
+      var h,
+        s,
+        l = (max + min) / 2;
+
+      if (max == min) {
+        h = s = 0; // achromatic
+      } else {
+        var d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r:
+            h = (g - b) / d + (g < b ? 6 : 0);
+            break;
+          case g:
+            h = (b - r) / d + 2;
+            break;
+          case b:
+            h = (r - g) / d + 4;
+            break;
+        }
+        h /= 6;
+      }
+
+      return [h, s, l];
+    },
+    updateColor: function() {
+      // console.log(this.rgbToHsl(this.settings.color)[0] * 360);
+      // console.log(this.rgbToHsl(this.settings.color)[2]);
+      let content = document.querySelector("#content");
+      content.style.setProperty(
+        "--hue",
+        this.rgbToHsl(this.settings.color)[0] * 360
+      );
+      content.style.setProperty(
+        "--value",
+        "" + this.rgbToHsl(this.settings.color)[2] * 100 + "%"
+      );
+      this.updateSettings();
+    },
     getStartedDaysAgo: function() {
       let firstStartDay = Math.floor(
         (new Date() - this.getFirstStartDay()) / 86400000
       );
-      console.warn(firstStartDay);
+      //console.log(firstStartDay);
       return firstStartDay;
     },
     getFirstStartDay: function() {
       let earliestStartDay = new Date();
       for (let habit of this.habits) {
         let checkedDate = new Date(habit.startDay);
-        console.error(checkedDate);
-        console.warn(checkedDate > earliestStartDay);
-        console.warn(checkedDate == earliestStartDay);
-        console.warn(checkedDate < earliestStartDay);
+        //console.log(checkedDate);
+        // console.log(checkedDate > earliestStartDay);
+        // console.log(checkedDate == earliestStartDay);
+        // console.log(checkedDate < earliestStartDay);
         if (checkedDate < earliestStartDay) {
           earliestStartDay = checkedDate;
-          console.warn(earliestStartDay);
+          //console.log(earliestStartDay);
         }
       }
-      console.error("earliestStartDay");
-      console.error(earliestStartDay);
+      //console.log("earliestStartDay");
+      //console.log(earliestStartDay);
       return earliestStartDay;
     },
     deleteHabit: function() {
@@ -233,7 +286,7 @@ export default {
     getDaysInARow: function(habitIndex) {
       let habit = this.habits[habitIndex];
       let daysInARow = 0;
-      console.log(habit + daysInARow);
+      //console.log(habit + daysInARow);
       while (
         habit.records[
           new Date(new Date() - 86400000 * daysInARow)
@@ -279,15 +332,17 @@ export default {
       }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
+        console.log("found data in localStorage!");
         this.habits = JSON.parse(storedHabits);
-        console.log("from localData:");
-        console.log(this.habits);
-        console.log("length from localData:");
-        console.log(this.habits.length);
-        console.log("stringified from localData: ");
-        console.log(JSON.stringify(this.habits));
+        // console.log("from localData:");
+        // console.log(this.habits);
+        // console.log("length from localData:");
+        // console.log(this.habits.length);
+        // console.log("stringified from localData: ");
+        // console.log(JSON.stringify(this.habits));
+        this.updateColor();
       } else {
-        console.log("no data found in localstorage!");
+        console.warn("no data found in localstorage!");
         this.habits.push(
           {
             name: "powygrzewać się na słoneczku",
@@ -378,15 +433,15 @@ export default {
             },
           }
         );
-        console.log("pushed: ");
-        console.log(this.habits);
-        console.log("stringified pushed: ");
-        console.log(JSON.stringify(this.habits));
+        // console.log("pushed: ");
+        // console.log(this.habits);
+        // console.log("stringified pushed: ");
+        // console.log(JSON.stringify(this.habits));
       }
       this.loaded = true;
     },
     fullDaysList: function(sinceDate) {
-      console.log("fullDaysList");
+      // console.log("fullDaysList");
       let iDate = new Date(sinceDate);
       let dates = [];
       while (iDate <= this.lastDisplayedDate) {
@@ -404,7 +459,7 @@ export default {
   },
   mounted() {
     this.loadData();
-    console.log(JSON.stringify(this.habits));
+    //console.log(JSON.stringify(this.habits));
   },
   computed: {
     lastDisplayedDate: function() {
@@ -418,8 +473,8 @@ export default {
       return lastDate;
     },
     firstDisplayedDate: function() {
-      console.log("typeof daysAgo");
-      console.log(typeof this.settings.daysAgo);
+      // console.log("typeof daysAgo");
+      // console.log(typeof this.settings.daysAgo);
       let firstDate = new Date(
         new Date(
           new Date() -
@@ -431,10 +486,10 @@ export default {
           .toISOString()
           .substring(0, 10)
       );
-      console.log("firstDisplayedDate");
-      console.log(firstDate);
-      console.log("this.settings.displayedDays - 1 + this.settings.daysAgo");
-      console.log(this.settings.displayedDays - 1 + this.settings.daysAgo);
+      // console.log("firstDisplayedDate");
+      // console.log(firstDate);
+      // console.log("this.settings.displayedDays - 1 + this.settings.daysAgo");
+      // console.log(this.settings.displayedDays - 1 + this.settings.daysAgo);
       return firstDate;
     },
     daysList: function() {
@@ -449,8 +504,8 @@ export default {
       }
       // dates.pop();
       // dates.push("today");
-      console.log("daysList");
-      console.log(dates);
+      // console.log("daysList");
+      // console.log(dates);
       return dates;
     },
   },
@@ -458,13 +513,34 @@ export default {
 </script>
 
 <style scoped>
+#content {
+  --hue: 196;
+  --saturation: 73%;
+  --value: 50%;
+  --value-light: 92%;
+  --accent-color: hsl(
+    var(--hue),
+    var(--saturation),
+    var(--value)
+  ); /* #22aadd */
+  --accent-color-light: hsl(
+    var(--hue),
+    var(--saturation),
+    var(--value-light)
+  ); /* #effbfd */
+  --odd-table-row-background-color: #ffffff;
+  --even-table-row-background-color: #f3f3f3;
+  --line-between-table-rows-color: #dddddd;
+  --table-header-text-color: #ffffff;
+}
+
 #settingsDiv {
   max-width: 600px;
   margin-left: calc(50% - 300px);
   padding: 20px;
-  border: 1px solid #22aadd;
+  border: 1px solid var(--accent-color);
   border-radius: 12px;
-  background: #effbfd;
+  background: var(--accent-color-light);
 }
 
 .widthControlledCell {
@@ -480,11 +556,12 @@ export default {
   font-family: sans-serif;
   min-width: 250px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  background: var(--odd-table-row-background-color);
 }
 
 .styled-table thead tr {
-  background-color: #22aadd;
-  color: #ffffff;
+  background-color: var(--accent-color);
+  color: var(--table-header-text-color);
   text-align: left;
 }
 
@@ -494,20 +571,20 @@ export default {
 }
 
 .styled-table tbody tr {
-  border-bottom: 1px solid #dddddd;
+  border-bottom: 1px solid var(--line-between-table-rows-color);
 }
 
 .styled-table tbody tr:nth-of-type(even) {
-  background-color: #f3f3f3;
+  background-color: var(--even-table-row-background-color);
 }
 
 .styled-table tbody tr:last-of-type {
-  border-bottom: 2px solid #22aadd;
+  border-bottom: 2px solid var(--accent-color);
 }
 
 .styled-table tbody tr.active-row {
   font-weight: bold;
-  color: #22aadd;
+  color: var(--accent-color);
   /* #009879; */
 }
 </style>
