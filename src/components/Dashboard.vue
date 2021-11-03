@@ -49,7 +49,15 @@
               v-if="new Date(date) <= new Date()"
               style="cursor: pointer;"
               @click="changeStatus(habit, date)"
+              :class="
+                date == habit.startDay.substring(0, 10) && settings.markStartDay
+                  ? 'firstDayOfHabitTableDiv'
+                  : ''
+              "
             >
+              <span v-if="settings.showCellDate" style="font-size:12px;">{{
+                date.substr(5, 5)
+              }}</span>
               <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
               <v-icon v-if="!(date in habit.records)" color="#444444"
                 >mdi-square-rounded-outline</v-icon
@@ -147,13 +155,27 @@
             >add habit</v-btn
           >
         </v-row>
-        <v-color-picker
-          v-model="settings.color"
-          dot-size="25"
-          swatches-max-height="200"
-          @input="updateColor"
-        ></v-color-picker>
       </v-container>
+      <!-- accent color -->
+      <v-color-picker
+        v-model="settings.color"
+        dot-size="25"
+        swatches-max-height="200"
+        @input="updateColor"
+      ></v-color-picker>
+
+      <!-- mark start day -->
+      <v-switch
+        v-model="settings.markStartDay"
+        label="Mark start day"
+        @change="updateSettings"
+      ></v-switch>
+      <!-- show cell date -->
+      <v-switch
+        v-model="settings.showCellDate"
+        label="Show cell date"
+        @change="updateSettings"
+      ></v-switch>
     </div>
     <!-- HABIT DETAILS V-DIALOG -->
     <v-dialog v-model="habitDetailsDialog" width="min(80%, 600px)">
@@ -329,6 +351,8 @@ export default {
         this.settings.useThick = false;
         this.settings.displayedDays = 8;
         this.settings.daysAgo = 0;
+        this.settings.markStartDay = false;
+        this.settings.showCellDate = false;
       }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
@@ -586,5 +610,9 @@ export default {
   font-weight: bold;
   color: var(--accent-color);
   /* #009879; */
+}
+
+.firstDayOfHabitTableDiv {
+  background: hsl(100, 50%, 50%, 45%);
 }
 </style>
