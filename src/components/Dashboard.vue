@@ -9,7 +9,7 @@
         <tr>
           <th class="widthControlledCell"></th>
           <th
-            v-for="(date, index) in fullDaysListExperimental()"
+            v-for="(date, index) in fullDaysList()"
             :key="index"
             class="widthControlledCell"
           >
@@ -27,8 +27,7 @@
           <td
             v-for="index2 in Math.min(
               Math.max(
-                new Date(habit.startDay) -
-                  new Date(fullDaysListExperimental()[0]),
+                new Date(habit.startDay) - new Date(fullDaysList()[0]),
                 0
               ) / 86400000,
               settings.displayedDays
@@ -39,8 +38,8 @@
           <!-- After started new -->
           <td
             class="widthControlledCell"
-            v-for="(date, index) in fullDaysListExperimental(
-              new Date(habit.startDay) > new Date(fullDaysListExperimental()[0])
+            v-for="(date, index) in fullDaysList(
+              new Date(habit.startDay) > new Date(fullDaysList()[0])
                 ? new Date(habit.startDay) - 86400000
                 : undefined,
               index
@@ -68,7 +67,7 @@
               <!-- TICK -->
               <v-icon
                 v-if="date in habit.records && habit.records[date]"
-                color="green darken-2"
+                :color="settings.blueGreen ? 'blue darken-1' : 'green darken-2'"
                 >{{
                   settings.useThick ? "mdi-check-bold" : "mdi-check"
                 }}</v-icon
@@ -176,6 +175,12 @@
       <v-switch
         v-model="settings.showCellDate"
         label="Show cell date"
+        @change="updateSettings"
+      ></v-switch>
+      <!-- deuteranopia colorblind mode -->
+      <v-switch
+        v-model="settings.blueGreen"
+        label="Colorblind mode"
         @change="updateSettings"
       ></v-switch>
     </div>
@@ -399,8 +404,9 @@ export default {
       }
       this.loaded = true;
     },
-    fullDaysListExperimental: function(sinceDate, msg = "") {
-      // console.log("fullDaysListExperimental");
+    // eslint-disable-next-line no-unused-vars
+    fullDaysList: function(sinceDate, msg = "") {
+      // console.log("fullDaysList");
       if (!sinceDate) {
         sinceDate = new Date(0);
       }
@@ -419,46 +425,14 @@ export default {
         );
         iDate.setDate(iDate.getDate() - 1);
       }
-      console.warn(msg);
-      console.warn(dates);
+      // console.log(msg);
+      // console.log(dates);
       return dates;
     },
   },
   mounted() {
     this.loadData();
     //console.log(JSON.stringify(this.habits));
-  },
-  computed: {
-    lastDisplayedDate: function() {
-      let lastDate = new Date(
-        new Date(new Date() - 86400000 * this.settings.daysAgo)
-          .toISOString()
-          .substring(0, 10)
-      );
-      console.log("lastDisplayedDate: ");
-      console.log(lastDate);
-      return lastDate;
-    },
-    firstDisplayedDate: function() {
-      // console.log("typeof daysAgo");
-      // console.log(typeof this.settings.daysAgo);
-      let firstDate = new Date(
-        new Date(
-          new Date() -
-            86400000 *
-              (this.settings.displayedDays -
-                1 +
-                parseInt(this.settings.daysAgo))
-        )
-          .toISOString()
-          .substring(0, 10)
-      );
-      // console.log("firstDisplayedDate");
-      // console.log(firstDate);
-      // console.log("this.settings.displayedDays - 1 + this.settings.daysAgo");
-      // console.log(this.settings.displayedDays - 1 + this.settings.daysAgo);
-      return firstDate;
-    },
   },
 };
 </script>
