@@ -9,11 +9,11 @@
         <tr>
           <th class="widthControlledCell"></th>
           <th
-            v-for="(date, index) in daysList"
+            v-for="(date, index) in fullDaysListExperimental()"
             :key="index"
             class="widthControlledCell"
           >
-            {{ date }}
+            {{ date.substr(5, 6) }}
           </th>
         </tr>
       </thead>
@@ -27,7 +27,8 @@
           <td
             v-for="index2 in Math.min(
               Math.max(
-                new Date(habit.startDay) - new Date(firstDisplayedDate),
+                new Date(habit.startDay) -
+                  new Date(fullDaysListExperimental()[0]),
                 0
               ) / 86400000,
               settings.displayedDays
@@ -38,19 +39,20 @@
           <!-- After started new -->
           <td
             class="widthControlledCell"
-            v-for="(date, index) in fullDaysList(
-              new Date(habit.startDay) > new Date(firstDisplayedDate)
-                ? new Date(habit.startDay)
-                : new Date(firstDisplayedDate)
+            v-for="(date, index) in fullDaysListExperimental(
+              new Date(habit.startDay) > new Date(fullDaysListExperimental()[0])
+                ? new Date(habit.startDay) - 86400000
+                : undefined,
+              index
             )"
             :key="'fd' + index"
           >
             <div
-              v-if="new Date(date) <= new Date()"
               style="cursor: pointer;"
               @click="changeStatus(habit, date)"
               :class="
-                date == habit.startDay.substring(0, 10) && settings.markStartDay
+                date == (habit.startDay + '').substring(0, 10) &&
+                settings.markStartDay
                   ? 'firstDayOfHabitTableDiv'
                   : ''
               "
@@ -223,9 +225,9 @@ export default {
   }),
   methods: {
     rgbToHsl: function(color) {
-      var r = parseInt(color.substr(1, 2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
-      var g = parseInt(color.substr(3, 2), 16);
-      var b = parseInt(color.substr(5, 2), 16);
+      var r = parseInt((color + "").substr(1, 2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
+      var g = parseInt((color + "").substr(3, 2), 16);
+      var b = parseInt((color + "").substr(5, 2), 16);
 
       (r /= 255), (g /= 255), (b /= 255);
       var max = Math.max(r, g, b),
@@ -388,73 +390,6 @@ export default {
               "2021-10-14": true,
               "2021-10-15": true,
             },
-          },
-          {
-            name: "ponosić biszkopta w pyszczku",
-            startDay: new Date("2021-10-13"),
-            dayRecords: [2, 3],
-            records: {
-              "2021-10-13": true,
-              "2021-10-14": false,
-              "2021-10-15": true,
-              "2021-10-16": true,
-            },
-          },
-          {
-            name: "zeżreć puchę karmy",
-            startDay: new Date("2021-10-13"),
-            dayRecords: [1, 1],
-            records: {
-              "2021-10-13": true,
-              "2021-10-14": true,
-              "2021-10-15": true,
-              "2021-10-16": true,
-              "2021-10-17": true,
-              "2021-10-18": true,
-              "2021-10-19": true,
-            },
-          },
-          {
-            name: "być grzecznym",
-            startDay: new Date("2021-10-13"),
-            dayRecords: [1, 1],
-            records: {
-              "2021-10-13": true,
-              "2021-10-14": true,
-              "2021-10-15": false,
-              "2021-10-16": false,
-              "2021-10-17": false,
-              "2021-10-18": false,
-              "2021-10-19": false,
-            },
-          },
-          {
-            name: "wylizać sobie futerko",
-            startDay: new Date("2021-10-12"),
-            dayRecords: [1, 1],
-            records: {
-              "2021-10-12": true,
-              "2021-10-13": true,
-              "2021-10-14": false,
-              "2021-10-15": true,
-              "2021-10-16": true,
-              "2021-10-17": false,
-              "2021-10-18": true,
-              "2021-10-19": true,
-            },
-          },
-          {
-            name: "wylizać komuś innemu futerko",
-            startDay: new Date("2021-10-12"),
-            dayRecords: [1, 1],
-            records: {
-              "2021-10-12": true,
-              "2021-10-13": false,
-              "2021-10-14": true,
-              "2021-10-16": true,
-              "2021-10-18": false,
-              "2021-10-19": true,
-            },
           }
         );
         // console.log("pushed: ");
@@ -464,20 +399,28 @@ export default {
       }
       this.loaded = true;
     },
-    fullDaysList: function(sinceDate) {
-      // console.log("fullDaysList");
-      let iDate = new Date(sinceDate);
+    fullDaysListExperimental: function(sinceDate, msg = "") {
+      // console.log("fullDaysListExperimental");
+      if (!sinceDate) {
+        sinceDate = new Date(0);
+      }
+      let iDate = new Date(new Date() - 86400000 * this.settings.daysAgo);
       let dates = [];
-      while (iDate <= this.lastDisplayedDate) {
-        dates.push(
+      while (
+        dates.length < this.settings.displayedDays &&
+        new Date(sinceDate) <= new Date(iDate)
+      ) {
+        dates.unshift(
           iDate.getFullYear() +
             "-" +
             (iDate.getMonth() + 1) +
             "-" +
-            iDate.getDate()
+            (iDate.getDate() > 10 ? iDate.getDate() : "0" + iDate.getDate())
         );
-        iDate.setDate(iDate.getDate() + 1);
+        iDate.setDate(iDate.getDate() - 1);
       }
+      console.warn(msg);
+      console.warn(dates);
       return dates;
     },
   },
@@ -516,22 +459,6 @@ export default {
       // console.log(this.settings.displayedDays - 1 + this.settings.daysAgo);
       return firstDate;
     },
-    daysList: function() {
-      let iDate = new Date(this.firstDisplayedDate.valueOf());
-      let dates = [];
-      while (iDate <= this.lastDisplayedDate) {
-        // display month as well
-        //dates.push(iDate.getMonth() + 1 + "-" + iDate.getDate());
-        // only display day
-        dates.push(iDate.getDate());
-        iDate.setDate(iDate.getDate() + 1);
-      }
-      // dates.pop();
-      // dates.push("today");
-      // console.log("daysList");
-      // console.log(dates);
-      return dates;
-    },
   },
 };
 </script>
@@ -569,7 +496,7 @@ export default {
 
 .widthControlledCell {
   text-align: center;
-  min-width: 54px;
+  min-width: 72px;
   height: 50px;
 }
 
