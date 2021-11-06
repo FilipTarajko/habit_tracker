@@ -360,6 +360,8 @@ export default {
       if (storedSettings) {
         this.settings = JSON.parse(storedSettings);
       } else {
+        this.settings.color = "#123456";
+        this.settings.blueGreen = false;
         this.settings.useThick = false;
         this.settings.displayedDays = 8;
         this.settings.daysAgo = 0;
