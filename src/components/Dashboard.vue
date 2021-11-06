@@ -40,7 +40,7 @@
             class="widthControlledCell"
             v-for="(date, index) in fullDaysList(
               new Date(habit.startDay) > new Date(fullDaysList()[0])
-                ? new Date(habit.startDay) - 86400000
+                ? new Date(habit.startDay)
                 : undefined,
               index
             )"
@@ -107,23 +107,22 @@
       </tbody>
     </table>
     <div v-if="this.loaded" id="settingsDiv">
-      <!-- thick icons -->
-      <v-switch
-        v-model="settings.useThick"
-        label="Use thick icons"
-        @change="updateSettings"
-      ></v-switch>
+      <!-- add a new habit -->
+      <v-container>
+        <v-row>
+          <v-text-field
+            id="newHabitNameInput"
+            label="Add a new habit"
+            persistent-hint
+          ></v-text-field>
+          <v-btn
+            @click="addNewHabit"
+            style="margin-top: 16px; margin-left: 16px;"
+            >add habit</v-btn
+          >
+        </v-row>
+      </v-container>
       <!-- days ago -->
-      <v-text-field
-        label="Days ago"
-        persistent-hint
-        v-model="settings.daysAgo"
-        :hint="
-          'last displayed day will be set to ' + settings.daysAgo + ' days ago'
-        "
-        type="number"
-        @change="updateSettings"
-      ></v-text-field>
       <v-slider
         v-model="settings.daysAgo"
         :max="this.getStartedDaysAgo() - settings.displayedDays + 2"
@@ -145,16 +144,34 @@
       ></v-slider>
       <v-container>
         <v-row>
-          <v-text-field
-            id="newHabitNameInput"
-            label="Add a new habit"
-            persistent-hint
-          ></v-text-field>
-          <v-btn
-            @click="addNewHabit"
-            style="margin-top: 16px; margin-left: 16px;"
-            >add habit</v-btn
-          >
+          <!-- thick icons -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.useThick"
+            label="Use thick icons"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- deuteranopia colorblind mode -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.blueGreen"
+            label="Colorblind mode"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- mark start day -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.markStartDay"
+            label="Mark start day"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- show cell date -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.showCellDate"
+            label="Show cell date"
+            @change="updateSettings"
+          ></v-switch>
         </v-row>
       </v-container>
       <!-- accent color -->
@@ -164,25 +181,6 @@
         swatches-max-height="200"
         @input="updateColor"
       ></v-color-picker>
-
-      <!-- mark start day -->
-      <v-switch
-        v-model="settings.markStartDay"
-        label="Mark start day"
-        @change="updateSettings"
-      ></v-switch>
-      <!-- show cell date -->
-      <v-switch
-        v-model="settings.showCellDate"
-        label="Show cell date"
-        @change="updateSettings"
-      ></v-switch>
-      <!-- deuteranopia colorblind mode -->
-      <v-switch
-        v-model="settings.blueGreen"
-        label="Colorblind mode"
-        @change="updateSettings"
-      ></v-switch>
     </div>
     <!-- HABIT DETAILS V-DIALOG -->
     <v-dialog v-model="habitDetailsDialog" width="min(80%, 600px)">
@@ -328,9 +326,16 @@ export default {
       return daysInARow;
     },
     addNewHabit: function() {
+      let date = new Date();
+      let temp =
+        date.getFullYear() +
+        "-" +
+        (date.getMonth() + 1) +
+        "-" +
+        (date.getDate() > 10 ? date.getDate() : "0" + date.getDate());
       this.habits.push({
         name: document.getElementById("newHabitNameInput").value,
-        startDay: new Date(new Date().toISOString().substring(0, 10)),
+        startDay: temp,
         records: {},
       });
       this.refreshAndUpdate();
@@ -515,5 +520,9 @@ export default {
 
 .firstDayOfHabitTableDiv {
   background: hsl(100, 50%, 50%, 45%);
+}
+
+.settingsSwitch {
+  margin: 0px 12px;
 }
 </style>
