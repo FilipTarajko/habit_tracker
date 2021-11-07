@@ -227,6 +227,36 @@ export default {
     },
   }),
   methods: {
+    measureScrollbarWidth() {
+      // Add temporary box to wrapper
+      let scrollbox = document.createElement("div");
+
+      // Make box scrollable
+      scrollbox.style.overflow = "scroll";
+
+      // Append box to document
+      document.body.appendChild(scrollbox);
+
+      // Measure inner width of box
+      let scrollBarWidth = scrollbox.offsetWidth - scrollbox.clientWidth;
+
+      // Remove box
+      document.body.removeChild(scrollbox);
+      return scrollBarWidth;
+    },
+    updateWindowSize: function() {
+      let content = document.getElementById("content");
+      let scale =
+        window.innerWidth < 1200 ? (window.innerWidth + 300) / 1500 : 1;
+      content.style.transform = "scale(" + scale + ")";
+      content.style.margin = `0 0 0 ${-(
+        (window.innerWidth -
+          window.innerWidth * scale +
+          this.measureScrollbarWidth()) /
+        2
+      )}px`;
+      content.style.width = window.innerWidth / scale + "px";
+    },
     rgbToHsl: function(color) {
       var r = parseInt((color + "").substr(1, 2), 16); // Grab the hex representation of red (chars 1-2) and convert to decimal (base 10).
       var g = parseInt((color + "").substr(3, 2), 16);
@@ -439,6 +469,8 @@ export default {
   },
   mounted() {
     this.loadData();
+    this.updateWindowSize();
+    window.onresize = this.updateWindowSize;
     //console.log(JSON.stringify(this.habits));
   },
 };
@@ -464,11 +496,13 @@ export default {
   --even-table-row-background-color: #f3f3f3;
   --line-between-table-rows-color: #dddddd;
   --table-header-text-color: #ffffff;
+  transform-origin: 50vw 0vh;
 }
 
 #settingsDiv {
   max-width: 600px;
-  margin-left: calc(50% - 300px);
+  margin-left: auto;
+  margin-right: auto;
   padding: 20px;
   border: 1px solid var(--accent-color);
   border-radius: 12px;

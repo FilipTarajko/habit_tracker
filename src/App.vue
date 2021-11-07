@@ -5,9 +5,7 @@
     </v-app-bar>
 
     <v-main>
-      <div style="padding: 30px;">
-        <Dashboard />
-      </div>
+      <Dashboard />
     </v-main>
   </v-app>
 </template>
