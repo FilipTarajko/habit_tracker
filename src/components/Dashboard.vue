@@ -47,8 +47,9 @@
             :key="'fd' + index"
           >
             <div
+              v-if="habit.type == 'boolean'"
               style="cursor: pointer;"
-              @click="changeStatus(habit, date)"
+              @click="changeBooleanStatus(habit, date)"
               :class="
                 date == (habit.startDay + '').substring(0, 10) &&
                 settings.markStartDay
@@ -81,6 +82,40 @@
                 }}</v-icon
               >
             </div>
+
+            <div
+              v-if="habit.type == 'numeric'"
+              style="cursor: pointer;"
+              @click="changeNumericStatus(habit, date)"
+              :class="
+                date == (habit.startDay + '').substring(0, 10) &&
+                settings.markStartDay
+                  ? 'firstDayOfHabitTableDiv'
+                  : ''
+              "
+            >
+              <span v-if="settings.showCellDate" style="font-size:12px;">{{
+                date.substr(5, 5)
+              }}</span>
+              <span
+                :style="
+                  'color: ' +
+                    (habit.records[date] >= habit.dailyTarget
+                      ? settings.blueGreen
+                        ? 'blue'
+                        : 'green'
+                      : 'red') +
+                    '; user-select: none;' +
+                    (settings.useBold ? 'font-weight: bold; ' : '')
+                "
+              >
+                {{
+                  habit.records[date]
+                    ? date in habit.records && habit.records[date]
+                    : 0
+                }}
+              </span>
+            </div>
             <div v-if="new Date(date) > new Date()">
               <!-- Future -->
               <!-- <v-icon v-if="!(date in habit.records)" color="#444444"
@@ -107,16 +142,37 @@
       </tbody>
     </table>
     <div v-if="this.loaded" id="settingsDiv">
-      <!-- add a new habit -->
+      <!-- add a new boolean habit -->
       <v-container>
         <v-row>
           <v-text-field
-            id="newHabitNameInput"
-            label="Add a new habit"
+            id="newBooleanHabitNameInput"
+            label="Add a new true/false habit"
             persistent-hint
           ></v-text-field>
           <v-btn
-            @click="addNewHabit"
+            @click="addNewBooleanHabit"
+            style="margin-top: 16px; margin-left: 16px;"
+            >add habit</v-btn
+          >
+        </v-row>
+      </v-container>
+      <!-- add a new numeric habit -->
+      <v-container style="margin-top: -16px;">
+        <v-row>
+          <v-text-field
+            id="newNumericHabitNameInput"
+            label="New numeric habit name"
+            persistent-hint
+          ></v-text-field>
+          <v-text-field
+            style="margin-left: 10px;"
+            id="newNumericHabitTargetInput"
+            label="New numeric habit target"
+            persistent-hint
+          ></v-text-field>
+          <v-btn
+            @click="addNewNumericHabit"
             style="margin-top: 16px; margin-left: 16px;"
             >add habit</v-btn
           >
@@ -144,13 +200,6 @@
       ></v-slider>
       <v-container>
         <v-row>
-          <!-- thick icons -->
-          <v-switch
-            class="settingsSwitch"
-            v-model="settings.useThick"
-            label="Use thick icons"
-            @change="updateSettings"
-          ></v-switch>
           <!-- deuteranopia colorblind mode -->
           <v-switch
             class="settingsSwitch"
@@ -170,6 +219,20 @@
             class="settingsSwitch"
             v-model="settings.showCellDate"
             label="Show cell date"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- thick icons -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.useThick"
+            label="Use thick icons"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- bold text -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.useBold"
+            label="Use bold numbers"
             @change="updateSettings"
           ></v-switch>
         </v-row>
@@ -206,7 +269,12 @@
               : ""
           }}
           <br />
-          dni z rzędu: {{ getDaysInARow(displayedHabitId) }}
+          dni z rzędu: {{ getDaysInARow(displayedHabitId) }} <br />
+          type: {{ this.habits[displayedHabitId].type }}
+          <span v-if="this.habits[displayedHabitId].type == 'numeric'">
+            <br />
+            daily target: {{ this.habits[displayedHabitId].dailyTarget }}
+          </span>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -355,7 +423,7 @@ export default {
       }
       return daysInARow;
     },
-    addNewHabit: function() {
+    addNewBooleanHabit: function() {
       let date = new Date();
       let temp =
         date.getFullYear() +
@@ -364,9 +432,28 @@ export default {
         "-" +
         (date.getDate() > 10 ? date.getDate() : "0" + date.getDate());
       this.habits.push({
-        name: document.getElementById("newHabitNameInput").value,
+        name: document.getElementById("newBooleanHabitNameInput").value,
         startDay: temp,
         records: {},
+        type: "boolean",
+      });
+      this.refreshAndUpdate();
+    },
+    addNewNumericHabit: function() {
+      let date = new Date();
+      let temp =
+        date.getFullYear() +
+        "-" +
+        (date.getMonth() + 1) +
+        "-" +
+        (date.getDate() > 10 ? date.getDate() : "0" + date.getDate());
+      this.habits.push({
+        name: document.getElementById("newNumericHabitNameInput").value,
+        dailyTarget: document.getElementById("newNumericHabitTargetInput")
+          .value,
+        startDay: temp,
+        records: {},
+        type: "numeric",
       });
       this.refreshAndUpdate();
     },
@@ -377,11 +464,19 @@ export default {
       this.reloads.table += 1;
       localStorage.setItem("habits", JSON.stringify(this.habits));
     },
-    changeStatus: function(habit, date) {
+    changeBooleanStatus: function(habit, date) {
       if (habit.records[date]) {
         habit.records[date] = false;
       } else {
         habit.records[date] = true;
+      }
+      this.refreshAndUpdate();
+    },
+    changeNumericStatus: function(habit, date) {
+      if (habit.records[date]) {
+        habit.records[date] += 1;
+      } else {
+        habit.records[date] = 1;
       }
       this.refreshAndUpdate();
     },
@@ -392,6 +487,7 @@ export default {
       } else {
         this.settings.color = "#123456";
         this.settings.blueGreen = false;
+        this.settings.useBold = false;
         this.settings.useThick = false;
         this.settings.displayedDays = 8;
         this.settings.daysAgo = 0;
@@ -415,23 +511,47 @@ export default {
           {
             name: "powygrzewać się na słoneczku",
             startDay: new Date("2021-10-12"),
-            dayRecords: [5, 6, 8],
             records: {
               "2021-10-12": true,
               "2021-10-15": true,
               "2021-10-17": true,
               "2021-10-18": false,
             },
+            type: "boolean",
           },
           {
             name: "wejść w pudełko",
             startDay: new Date("2021-10-13"),
-            dayRecords: [3, 4, 6],
             records: {
               "2021-10-13": true,
               "2021-10-14": true,
               "2021-10-15": true,
             },
+            type: "boolean",
+          },
+          {
+            name: "zjesc 3 puszki karmy",
+            startDay: new Date("2021-11-04"),
+            dailyTarget: 3,
+            records: {
+              "2021-11-04": 2,
+              "2021-11-05": 4,
+              "2021-11-06": 2,
+              "2021-11-07": 5,
+              "2021-11-08": 3,
+            },
+            type: "numeric",
+          },
+          {
+            name: "złapać 2 myszy",
+            startDay: new Date("2021-11-06"),
+            dailyTarget: 2,
+            records: {
+              "2021-11-06": 1,
+              "2021-11-07": 2,
+              "2021-11-08": 0,
+            },
+            type: "numeric",
           }
         );
         // console.log("pushed: ");
