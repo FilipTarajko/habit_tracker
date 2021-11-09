@@ -18,7 +18,10 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(habit, index) in habits" :key="index + 'A' + reloads.table">
+        <tr
+          v-for="(habit, index) in filteredHabits"
+          :key="index + 'A' + reloads.table"
+        >
           <!-- Habit name -->
           <td @click="showHabitDetails(index)" style="cursor: pointer;">
             {{ habit.name }}
@@ -235,6 +238,13 @@
             label="Use bold numbers"
             @change="updateSettings"
           ></v-switch>
+          <!-- hide completed -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.hideCompleted"
+            label="Hide completed"
+            @change="updateSettings"
+          ></v-switch>
         </v-row>
       </v-container>
       <!-- accent color -->
@@ -295,6 +305,15 @@ export default {
     },
   }),
   methods: {
+    completedToday(habit) {
+      let today = this.dateToYYYYMMDD(new Date());
+      if (habit.type == "boolean") {
+        console.log("today: " + today);
+        return today in habit.records && habit.records[today];
+      } else if (habit.type == "numeric") {
+        return habit.records[today] >= habit.dailyTarget;
+      }
+    },
     measureScrollbarWidth() {
       // Add temporary box to wrapper
       let scrollbox = document.createElement("div");
@@ -458,11 +477,15 @@ export default {
       this.refreshAndUpdate();
     },
     updateSettings: function() {
+      this.reloads.table += 1;
       localStorage.setItem("settings", JSON.stringify(this.settings));
     },
     refreshAndUpdate: function() {
       this.reloads.table += 1;
       localStorage.setItem("habits", JSON.stringify(this.habits));
+      // ugly but helps
+      this.settings.hideCompleted = !this.settings.hideCompleted;
+      this.settings.hideCompleted = !this.settings.hideCompleted;
     },
     changeBooleanStatus: function(habit, date) {
       if (habit.records[date]) {
@@ -493,6 +516,7 @@ export default {
         this.settings.daysAgo = 0;
         this.settings.markStartDay = false;
         this.settings.showCellDate = false;
+        this.settings.hideCompleted = false;
       }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
@@ -592,6 +616,14 @@ export default {
     this.updateWindowSize();
     window.onresize = this.updateWindowSize;
     //console.log(JSON.stringify(this.habits));
+  },
+  computed: {
+    filteredHabits: function() {
+      if (this.settings.hideCompleted) {
+        return this.habits.filter((habit) => !this.completedToday(habit));
+      }
+      return this.habits;
+    },
   },
 };
 </script>
