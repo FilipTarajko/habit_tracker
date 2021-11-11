@@ -99,6 +99,7 @@
             )"
             :key="'fd' + index"
           >
+            {{ wasCompletedDuringLastDays(habit, date) }}
             <div
               v-if="habit.type == 'boolean'"
               style="cursor: pointer;"
@@ -193,6 +194,12 @@
             label="Add a new true/false habit"
             persistent-hint
           ></v-text-field>
+          <v-text-field
+            id="newBooleanHabitEveryNthTimeInput"
+            label="every n days"
+            persistent-hint
+            style="margin-left: 10px; width: 0px;"
+          ></v-text-field>
           <v-btn
             @click="addNewBooleanHabit"
             style="margin-top: 16px; margin-left: 16px;"
@@ -205,14 +212,20 @@
         <v-row>
           <v-text-field
             id="newNumericHabitNameInput"
-            label="New numeric habit name"
+            label="numeric habit name"
             persistent-hint
           ></v-text-field>
           <v-text-field
-            style="margin-left: 10px;"
+            style="margin-left: 10px; width: 40px;"
             id="newNumericHabitTargetInput"
-            label="New numeric habit target"
+            label="target"
             persistent-hint
+          ></v-text-field>
+          <v-text-field
+            id="newNumericHabitEveryNthTimeInput"
+            label="every n days"
+            persistent-hint
+            style="margin-left: 10px; width: 84px;"
           ></v-text-field>
           <v-btn
             @click="addNewNumericHabit"
@@ -318,6 +331,13 @@
             label="Mark start day"
             @change="updateSettings"
           ></v-switch>
+          <!-- start new habits 1 month ago -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.startMonthAgo"
+            label="Start new habits 1 month ago"
+            @change="updateSettings"
+          ></v-switch>
         </v-row>
       </v-container>
     </div>
@@ -374,6 +394,35 @@ export default {
     },
   }),
   methods: {
+    wasCompletedDuringLastDays(habit, date) {
+      let days = habit.everyNthTime || 1;
+      let iteratedDate = new Date(date);
+      let back = 0;
+      if (habit.type == "boolean") {
+        while (back < days) {
+          if (
+            this.dateToYYYYMMDD(iteratedDate) in habit.records &&
+            habit.records[this.dateToYYYYMMDD(iteratedDate)]
+          ) {
+            return true;
+          }
+          back += 1;
+          iteratedDate.setDate(new Date(iteratedDate).getDate() - 1);
+        }
+      } else if (habit.type == "numeric") {
+        while (back < days) {
+          if (
+            habit.records[this.dateToYYYYMMDD(iteratedDate)] >=
+            habit.dailyTarget
+          ) {
+            return true;
+          }
+          back += 1;
+          iteratedDate.setDate(new Date(iteratedDate).getDate() - 1);
+        }
+      }
+      return false;
+    },
     getNumericHabitStateStyle(habit, date) {
       let style = "";
       style += "color: ";
@@ -384,7 +433,11 @@ export default {
           style += "green";
         }
       } else {
-        style += "red";
+        if (this.wasCompletedDuringLastDays(habit, date)) {
+          style += "#333";
+        } else {
+          style += "red";
+        }
       }
       style += "; user-select: none; ";
       style += this.settings.useBold ? "font-weight: bold; " : "";
@@ -392,17 +445,28 @@ export default {
     },
     getBooleanHabitStateColor(habit, date) {
       if (!(date in habit.records)) {
-        return "#444444";
+        if (this.wasCompletedDuringLastDays(habit, date)) {
+          return "#333";
+        } else {
+          return "#444444";
+        }
       }
       if (date in habit.records && habit.records[date]) {
         return this.settings.blueGreen ? "blue darken-1" : "green darken-2";
       }
       if (date in habit.records && !habit.records[date]) {
-        return "red darken-2";
+        if (this.wasCompletedDuringLastDays(habit, date)) {
+          return "#333";
+        } else {
+          return "red darken-2";
+        }
       }
     },
     getBooleanHabitStateIcon(habit, date) {
       if (!(date in habit.records)) {
+        if (this.wasCompletedDuringLastDays(habit, date)) {
+          return "mdi-shield-check-outline";
+        }
         // help / checkbox-blank-outline / square-outline / square-rounded-outline ... might be better?
         return "mdi-square-rounded-outline";
       }
@@ -410,6 +474,9 @@ export default {
         return this.settings.useThick ? "mdi-check-bold" : "mdi-check";
       }
       if (date in habit.records && !habit.records[date]) {
+        if (this.wasCompletedDuringLastDays(habit, date)) {
+          return "mdi-shield-check-outline";
+        }
         return this.settings.useThick ? "mdi-close-thick" : "mdi-window-close";
       }
     },
@@ -594,7 +661,7 @@ export default {
       let temp =
         date.getFullYear() +
         "-" +
-        (date.getMonth() + 1) +
+        (date.getMonth() + (this.settings.startMonthAgo ? 0 : 1)) +
         "-" +
         (date.getDate() > 10 ? date.getDate() : "0" + date.getDate());
       this.habits.push({
@@ -602,6 +669,9 @@ export default {
         startDay: temp,
         records: {},
         type: "boolean",
+        everyNthTime: document.getElementById(
+          "newBooleanHabitEveryNthTimeInput"
+        ).value,
       });
       this.refreshAndUpdate();
     },
@@ -610,7 +680,7 @@ export default {
       let temp =
         date.getFullYear() +
         "-" +
-        (date.getMonth() + 1) +
+        (date.getMonth() + (this.settings.startMonthAgo ? 0 : 1)) +
         "-" +
         (date.getDate() > 10 ? date.getDate() : "0" + date.getDate());
       this.habits.push({
@@ -620,6 +690,9 @@ export default {
         startDay: temp,
         records: {},
         type: "numeric",
+        everyNthTime: document.getElementById(
+          "newNumericHabitEveryNthTimeInput"
+        ).value,
       });
       this.refreshAndUpdate();
     },
@@ -690,6 +763,7 @@ export default {
         this.settings.hideCompletedHabits = false;
         this.settings.hideCompletedTasks = false;
         this.settings.sortTasksByDeadline = false;
+        this.settings.startMonthAgo = false;
       }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
