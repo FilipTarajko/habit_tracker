@@ -132,18 +132,7 @@
               <span v-if="settings.showCellDate" style="font-size:12px;">{{
                 date.substr(5, 5)
               }}</span>
-              <span
-                :style="
-                  'color: ' +
-                    (habit.records[date] >= habit.dailyTarget
-                      ? settings.blueGreen
-                        ? 'blue'
-                        : 'green'
-                      : 'red') +
-                    '; user-select: none;' +
-                    (settings.useBold ? 'font-weight: bold; ' : '')
-                "
-              >
+              <span :style="getNumericHabitStateStyle(habit, date)">
                 {{
                   habit.records[date]
                     ? date in habit.records && habit.records[date]
@@ -385,7 +374,22 @@ export default {
     },
   }),
   methods: {
-    // eslint-disable-next-line no-unused-vars
+    getNumericHabitStateStyle(habit, date) {
+      let style = "";
+      style += "color: ";
+      if (habit.records[date] >= habit.dailyTarget) {
+        if (this.settings.blueGreen) {
+          style += "blue";
+        } else {
+          style += "green";
+        }
+      } else {
+        style += "red";
+      }
+      style += "; user-select: none; ";
+      style += this.settings.useBold ? "font-weight: bold; " : "";
+      return style;
+    },
     getBooleanHabitStateColor(habit, date) {
       if (!(date in habit.records)) {
         return "#444444";
@@ -397,7 +401,6 @@ export default {
         return "red darken-2";
       }
     },
-    // eslint-disable-next-line no-unused-vars
     getBooleanHabitStateIcon(habit, date) {
       if (!(date in habit.records)) {
         // help / checkbox-blank-outline / square-outline / square-rounded-outline ... might be better?
@@ -746,6 +749,18 @@ export default {
               "2021-11-08": 1,
             },
             type: "numeric",
+          },
+          {
+            name: "everyNthTime: 2",
+            startDay: new Date("2021-11-06"),
+            dailyTarget: 2,
+            records: {
+              "2021-11-06": 1,
+              "2021-11-07": 2,
+              "2021-11-08": 1,
+            },
+            type: "numeric",
+            everyNthTime: 2,
           }
         );
       }
