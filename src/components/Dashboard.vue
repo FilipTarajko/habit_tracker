@@ -26,26 +26,9 @@
             {{ task.deadline }}
           </th>
           <th>
-            <span
-              style="background: rgba(255, 0, 0, 0.5)"
-              v-if="timeLeft(task.deadline) < 0"
-              >{{ timeLeft(task.deadline) }}</span
-            >
-            <span
-              style="background: rgba(255, 126, 0, 0.5)"
-              v-if="timeLeft(task.deadline) == 0"
-              >{{ timeLeft(task.deadline) }}</span
-            >
-            <span
-              style="background: rgba(255, 255, 0, 0.5)"
-              v-if="timeLeft(task.deadline) > 0 && timeLeft(task.deadline) < 7"
-              >{{ timeLeft(task.deadline) }}</span
-            >
-            <span
-              style="background: rgba(0, 255, 0, 0.5)"
-              v-if="timeLeft(task.deadline) > 7"
-              >{{ timeLeft(task.deadline) }}</span
-            >
+            <span :style="getTaskColor(task)">{{
+              timeLeft(task.deadline)
+            }}</span>
           </th>
           <th
             v-if="task.status == 'todo'"
@@ -186,28 +169,8 @@
                 }}
               </span>
             </div>
-            <div v-if="new Date(date) > new Date()">
-              <!-- Future -->
-              <!-- <v-icon v-if="!(date in habit.records)" color="#444444"
-                >mdi-minus</v-icon
-              > -->
-            </div>
+            <div v-if="new Date(date) > new Date()"></div>
           </td>
-          <!-- After started old -->
-          <!-- <td v-for="(cell, index2) in habit.dayRecords" :key="'C' + index2">
-            {{ cell }}
-          </td>
-          <td
-            v-for="index2 in Math.ceil(
-              (currentDate -
-                habit.startDay -
-                habit.dayRecords.length * 86400000) /
-                86400000
-            )"
-            :key="'D' + index2"
-          >
-            -
-          </td> -->
         </tr>
       </tbody>
     </table>
@@ -335,7 +298,7 @@
       </v-container>
       Visual preferences
       <br /><br />
-      <v-continer
+      <v-container
         ><v-row>
           <!-- deuteranopia colorblind mode -->
           <v-switch
@@ -358,7 +321,7 @@
             label="Use bold numbers"
             @change="updateSettings"
           ></v-switch> </v-row
-      ></v-continer>
+      ></v-container>
       <br />
       <!-- accent color -->
       <v-color-picker
@@ -440,6 +403,18 @@ export default {
     },
   }),
   methods: {
+    getTaskColor(task) {
+      let daysLeft = this.timeLeft(task.deadline);
+      if (daysLeft < 0) {
+        return "background: rgba(255, 0, 0, 0.5);";
+      } else if (daysLeft < 2) {
+        return "background: rgba(255, 126, 0, 0.5);";
+      } else if (daysLeft < 8) {
+        return "background: rgba(255, 255, 0, 0.5);";
+      } else {
+        return "background: rgba(0, 255, 0, 0.5);";
+      }
+    },
     timeLeft(deadline) {
       let date = new Date(this.dateToYYYYMMDD(new Date()));
       //let today = new Date(date.valueOf());
@@ -644,8 +619,8 @@ export default {
     },
     refreshAndUpdate: function() {
       // ugly but helps
-      this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
-      this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
+      // this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
+      // this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
       this.reloads.table += 1;
       localStorage.setItem("habits", JSON.stringify(this.habits));
       localStorage.setItem("tasks", JSON.stringify(this.tasks));
