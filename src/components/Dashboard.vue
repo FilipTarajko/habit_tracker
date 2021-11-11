@@ -110,30 +110,12 @@
                   : ''
               "
             >
+              <v-icon :color="getBooleanHabitStateColor(habit, date)">{{
+                getBooleanHabitStateIcon(habit, date)
+              }}</v-icon>
               <span v-if="settings.showCellDate" style="font-size:12px;">{{
                 date.substr(5, 5)
               }}</span>
-              <!-- EMPTY BOX, SLIM YET TO BE FOUND -->
-              <v-icon v-if="!(date in habit.records)" color="#444444"
-                >mdi-square-rounded-outline</v-icon
-              >
-              <!-- help / checkbox-blank-outline / square-outline / square-rounded-outline ... might be better? -->
-              <!-- TICK -->
-              <v-icon
-                v-if="date in habit.records && habit.records[date]"
-                :color="settings.blueGreen ? 'blue darken-1' : 'green darken-2'"
-                >{{
-                  settings.useThick ? "mdi-check-bold" : "mdi-check"
-                }}</v-icon
-              >
-              <!-- CROSS -->
-              <v-icon
-                v-if="date in habit.records && !habit.records[date]"
-                color="red darken-2"
-                >{{
-                  settings.useThick ? "mdi-close-thick" : "mdi-window-close"
-                }}</v-icon
-              >
             </div>
 
             <div
@@ -403,6 +385,31 @@ export default {
     },
   }),
   methods: {
+    // eslint-disable-next-line no-unused-vars
+    getBooleanHabitStateColor(habit, date) {
+      if (!(date in habit.records)) {
+        return "#444444";
+      }
+      if (date in habit.records && habit.records[date]) {
+        return this.settings.blueGreen ? "blue darken-1" : "green darken-2";
+      }
+      if (date in habit.records && !habit.records[date]) {
+        return "red darken-2";
+      }
+    },
+    // eslint-disable-next-line no-unused-vars
+    getBooleanHabitStateIcon(habit, date) {
+      if (!(date in habit.records)) {
+        // help / checkbox-blank-outline / square-outline / square-rounded-outline ... might be better?
+        return "mdi-square-rounded-outline";
+      }
+      if (date in habit.records && habit.records[date]) {
+        return this.settings.useThick ? "mdi-check-bold" : "mdi-check";
+      }
+      if (date in habit.records && !habit.records[date]) {
+        return this.settings.useThick ? "mdi-close-thick" : "mdi-window-close";
+      }
+    },
     getTaskColor(task) {
       let daysLeft = this.timeLeft(task.deadline);
       if (daysLeft < 0) {
@@ -736,7 +743,7 @@ export default {
             records: {
               "2021-11-06": 1,
               "2021-11-07": 2,
-              "2021-11-08": 0,
+              "2021-11-08": 1,
             },
             type: "numeric",
           }
