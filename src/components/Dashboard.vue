@@ -7,13 +7,80 @@
     >
       <thead>
         <tr>
-          <th class="widthControlledCell"></th>
+          <th class="widthControlledCell" style="width: 320px;">Task</th>
+          <th class="widthControlledCell">Deadline</th>
+          <th class="widthControlledCell">Time left</th>
+          <th class="widthControlledCell">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="(task, index) in filteredTasks"
+          :key="index + 'B' + reloads.table"
+          class="widthControlledCell"
+        >
+          <th>
+            {{ task.name }}
+          </th>
+          <th>
+            {{ task.deadline }}
+          </th>
+          <th>
+            <span
+              style="background: rgba(255, 0, 0, 0.5)"
+              v-if="timeLeft(task.deadline) < 0"
+              >{{ timeLeft(task.deadline) }}</span
+            >
+            <span
+              style="background: rgba(255, 126, 0, 0.5)"
+              v-if="timeLeft(task.deadline) == 0"
+              >{{ timeLeft(task.deadline) }}</span
+            >
+            <span
+              style="background: rgba(255, 255, 0, 0.5)"
+              v-if="timeLeft(task.deadline) > 0 && timeLeft(task.deadline) < 7"
+              >{{ timeLeft(task.deadline) }}</span
+            >
+            <span
+              style="background: rgba(0, 255, 0, 0.5)"
+              v-if="timeLeft(task.deadline) > 7"
+              >{{ timeLeft(task.deadline) }}</span
+            >
+          </th>
+          <th
+            v-if="task.status == 'todo'"
+            style="cursor: pointer;"
+            @click="changeTaskStatus(task)"
+          >
+            <v-icon color="#444444">mdi-square-rounded-outline</v-icon>
+          </th>
+          <th
+            v-if="task.status == 'done'"
+            style="cursor: pointer;"
+            @click="changeTaskStatus(task)"
+          >
+            <v-icon
+              :color="settings.blueGreen ? 'blue darken-1' : 'green darken-2'"
+              >{{ settings.useThick ? "mdi-check-bold" : "mdi-check" }}</v-icon
+            >
+          </th>
+        </tr>
+      </tbody>
+    </table>
+    <table
+      v-if="loaded"
+      class="styled-table"
+      style="margin-left: auto; margin-right: auto;"
+    >
+      <thead>
+        <tr>
+          <th class="widthControlledCell">Habit</th>
           <th
             v-for="(date, index) in fullDaysList()"
             :key="index"
             class="widthControlledCell"
           >
-            {{ date.substr(5, 6) }}
+            {{ date.substr(5, 5) }}
           </th>
         </tr>
       </thead>
@@ -63,7 +130,7 @@
               <span v-if="settings.showCellDate" style="font-size:12px;">{{
                 date.substr(5, 5)
               }}</span>
-              <!-- QUESTION MARK, SLIM YET TO BE FOUND -->
+              <!-- EMPTY BOX, SLIM YET TO BE FOUND -->
               <v-icon v-if="!(date in habit.records)" color="#444444"
                 >mdi-square-rounded-outline</v-icon
               >
@@ -145,8 +212,47 @@
       </tbody>
     </table>
     <div v-if="this.loaded" id="settingsDiv">
-      <!-- add a new boolean habit -->
+      <div>Adding</div>
+      <!-- add a new task -->
       <v-container>
+        <v-row>
+          <v-text-field
+            id="newTaskNameInput"
+            label="Add a new task"
+            persistent-hint
+          ></v-text-field>
+          <v-menu
+            v-model="newTaskDatePickerMenu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            transition="scale-transition"
+            offset-y
+            min-width="auto"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                style="margin-left: 10px;"
+                v-model="newTaskDate"
+                label="Task deadline"
+                readonly
+                v-bind="attrs"
+                v-on="on"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+              v-model="newTaskDate"
+              @input="newTaskDatePickerMenu = false"
+            ></v-date-picker>
+          </v-menu>
+          <v-btn
+            @click="addNewTask"
+            style="margin-top: 16px; margin-left: 16px;"
+            >add task
+          </v-btn>
+        </v-row>
+      </v-container>
+      <!-- add a new boolean habit -->
+      <v-container style="margin-top: -16px;">
         <v-row>
           <v-text-field
             id="newBooleanHabitNameInput"
@@ -181,6 +287,7 @@
           >
         </v-row>
       </v-container>
+      Browsing<br /><br />
       <!-- days ago -->
       <v-slider
         v-model="settings.daysAgo"
@@ -203,25 +310,38 @@
       ></v-slider>
       <v-container>
         <v-row>
+          <!-- hide completed habits -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.hideCompletedHabits"
+            label="Hide completed habits"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- hide completed tasks -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.hideCompletedTasks"
+            label="Hide completed tasks"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- sort tasks by deadline -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.sortTasksByDeadline"
+            label="Sort tasks by deadline"
+            @change="updateSettings"
+          ></v-switch>
+        </v-row>
+      </v-container>
+      Visual preferences
+      <br /><br />
+      <v-continer
+        ><v-row>
           <!-- deuteranopia colorblind mode -->
           <v-switch
             class="settingsSwitch"
             v-model="settings.blueGreen"
             label="Colorblind mode"
-            @change="updateSettings"
-          ></v-switch>
-          <!-- mark start day -->
-          <v-switch
-            class="settingsSwitch"
-            v-model="settings.markStartDay"
-            label="Mark start day"
-            @change="updateSettings"
-          ></v-switch>
-          <!-- show cell date -->
-          <v-switch
-            class="settingsSwitch"
-            v-model="settings.showCellDate"
-            label="Show cell date"
             @change="updateSettings"
           ></v-switch>
           <!-- thick icons -->
@@ -237,16 +357,9 @@
             v-model="settings.useBold"
             label="Use bold numbers"
             @change="updateSettings"
-          ></v-switch>
-          <!-- hide completed -->
-          <v-switch
-            class="settingsSwitch"
-            v-model="settings.hideCompleted"
-            label="Hide completed"
-            @change="updateSettings"
-          ></v-switch>
-        </v-row>
-      </v-container>
+          ></v-switch> </v-row
+      ></v-continer>
+      <br />
       <!-- accent color -->
       <v-color-picker
         v-model="settings.color"
@@ -254,6 +367,25 @@
         swatches-max-height="200"
         @input="updateColor"
       ></v-color-picker>
+      <br />Debug<br /><br />
+      <v-container>
+        <v-row>
+          <!-- show cell date -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.showCellDate"
+            label="Show cell date"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- mark start day -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.markStartDay"
+            label="Mark start day"
+            @change="updateSettings"
+          ></v-switch>
+        </v-row>
+      </v-container>
     </div>
     <!-- HABIT DETAILS V-DIALOG -->
     <v-dialog v-model="habitDetailsDialog" width="min(80%, 600px)">
@@ -294,9 +426,12 @@
 <script>
 export default {
   data: () => ({
+    newTaskDate: null,
+    newTaskDatePickerMenu: null,
     habitDetailsDialog: false,
     loaded: false,
     habits: [],
+    tasks: [],
     displayedHabitId: 0,
     currentDate: new Date(),
     settings: {},
@@ -305,6 +440,24 @@ export default {
     },
   }),
   methods: {
+    timeLeft(deadline) {
+      let date = new Date(this.dateToYYYYMMDD(new Date()));
+      //let today = new Date(date.valueOf());
+      let deadlineDate = new Date(this.dateToYYYYMMDD(deadline));
+      let timeLeft = 0;
+      if (date < deadlineDate) {
+        while (date < deadlineDate && timeLeft < 9999) {
+          timeLeft += 1;
+          date.setDate(new Date(date).getDate() + 1);
+        }
+      } else {
+        while (date > deadlineDate && timeLeft < 9999) {
+          timeLeft -= 1;
+          date.setDate(new Date(date).getDate() - 1);
+        }
+      }
+      return timeLeft;
+    },
     completedToday(habit) {
       let today = this.dateToYYYYMMDD(new Date());
       if (habit.type == "boolean") {
@@ -442,6 +595,15 @@ export default {
       }
       return daysInARow;
     },
+    addNewTask: function() {
+      this.tasks.push({
+        name: document.getElementById("newTaskNameInput").value,
+        deadline: this.newTaskDate,
+        status: "todo",
+        dateCreated: this.dateToYYYYMMDD(new Date()),
+      });
+      this.refreshAndUpdate();
+    },
     addNewBooleanHabit: function() {
       let date = new Date();
       let temp =
@@ -477,15 +639,24 @@ export default {
       this.refreshAndUpdate();
     },
     updateSettings: function() {
-      this.reloads.table += 1;
       localStorage.setItem("settings", JSON.stringify(this.settings));
+      this.reloads.table += 1;
     },
     refreshAndUpdate: function() {
+      // ugly but helps
+      this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
+      this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
       this.reloads.table += 1;
       localStorage.setItem("habits", JSON.stringify(this.habits));
-      // ugly but helps
-      this.settings.hideCompleted = !this.settings.hideCompleted;
-      this.settings.hideCompleted = !this.settings.hideCompleted;
+      localStorage.setItem("tasks", JSON.stringify(this.tasks));
+    },
+    changeTaskStatus: function(task) {
+      if (task.status == "todo") {
+        task.status = "done";
+      } else {
+        task.status = "todo";
+      }
+      this.refreshAndUpdate();
     },
     changeBooleanStatus: function(habit, date) {
       if (habit.records[date]) {
@@ -503,6 +674,21 @@ export default {
       }
       this.refreshAndUpdate();
     },
+    dynamicSort: function(property) {
+      var sortOrder = 1;
+      if (property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+      }
+      return function(a, b) {
+        /* next line works with strings and numbers,
+         * and you may want to customize it to your needs
+         */
+        var result =
+          a[property] < b[property] ? -1 : a[property] > b[property] ? 1 : 0;
+        return result * sortOrder;
+      };
+    },
     loadData: function() {
       let storedSettings = localStorage.getItem("settings");
       if (storedSettings) {
@@ -516,11 +702,13 @@ export default {
         this.settings.daysAgo = 0;
         this.settings.markStartDay = false;
         this.settings.showCellDate = false;
-        this.settings.hideCompleted = false;
+        this.settings.hideCompletedHabits = false;
+        this.settings.hideCompletedTasks = false;
+        this.settings.sortTasksByDeadline = false;
       }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
-        console.log("found data in localStorage!");
+        console.log("found habits data in localStorage!");
         this.habits = JSON.parse(storedHabits);
         // console.log("from localData:");
         // console.log(this.habits);
@@ -578,6 +766,50 @@ export default {
             type: "numeric",
           }
         );
+      }
+      let storedTasks = localStorage.getItem("tasks");
+      if (storedTasks) {
+        console.log("found tasks data in localStorage!");
+        this.tasks = JSON.parse(storedTasks);
+        // console.log("from localData:");
+        // console.log(this.habits);
+        // console.log("length from localData:");
+        // console.log(this.habits.length);
+        // console.log("stringified from localData: ");
+        // console.log(JSON.stringify(this.habits));
+      } else {
+        this.tasks.push(
+          {
+            name: "zrobić HLA",
+            deadline: "2021-11-11",
+            dateCreated: "2021-11-07",
+            status: "todo",
+          },
+          {
+            name: "zrobić sprawozdanie elektro",
+            deadline: "2021-11-12",
+            dateCreated: "2021-11-08",
+            status: "todo",
+          },
+          {
+            name: "zrobić pd z matmy",
+            deadline: "2021-11-13",
+            dateCreated: "2021-11-09",
+            status: "todo",
+          },
+          {
+            name: "stare",
+            deadline: "2021-11-03",
+            dateCreated: "2021-11-09",
+            status: "todo",
+          },
+          {
+            name: "nowe",
+            deadline: "2021-11-16",
+            dateCreated: "2021-11-05",
+            status: "todo",
+          }
+        );
         // console.log("pushed: ");
         // console.log(this.habits);
         // console.log("stringified pushed: ");
@@ -602,7 +834,7 @@ export default {
             "-" +
             (iDate.getMonth() + 1) +
             "-" +
-            (iDate.getDate() > 10 ? iDate.getDate() : "0" + iDate.getDate())
+            (iDate.getDate() >= 10 ? iDate.getDate() : "0" + iDate.getDate())
         );
         iDate.setDate(iDate.getDate() - 1);
       }
@@ -619,10 +851,24 @@ export default {
   },
   computed: {
     filteredHabits: function() {
-      if (this.settings.hideCompleted) {
+      if (this.settings.hideCompletedHabits) {
         return this.habits.filter((habit) => !this.completedToday(habit));
       }
       return this.habits;
+    },
+    filteredTasks: function() {
+      let array;
+      if (this.settings.hideCompletedTasks) {
+        array = this.tasks.filter((task) => task.status != "done");
+      } else {
+        array = this.tasks;
+      }
+      if (this.settings.sortTasksByDeadline) {
+        array = array.sort(this.dynamicSort("deadline"));
+      } else if (!this.settings.sortTasksByDeadline) {
+        array = array.sort(this.dynamicSort("dateCreated"));
+      }
+      return array;
     },
   },
 };
