@@ -99,7 +99,6 @@
             )"
             :key="'fd' + index"
           >
-            {{ wasCompletedDuringLastDays(habit, date) }}
             <div
               v-if="habit.type == 'boolean'"
               style="cursor: pointer;"
@@ -262,6 +261,14 @@
             class="settingsSwitch"
             v-model="settings.hideCompletedHabits"
             label="Hide completed habits"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- hide habits completed today -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.hideHabitsCompletedToday"
+            :disabled="settings.hideCompletedHabits"
+            label="Hide habits completed today"
             @change="updateSettings"
           ></v-switch>
           <!-- hide completed tasks -->
@@ -702,8 +709,12 @@ export default {
     },
     refreshAndUpdate: function() {
       // ugly but helps
-      // this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
-      // this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
+      this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
+      this.settings.hideCompletedHabits = !this.settings.hideCompletedHabits;
+      this.settings.hideHabitsCompletedToday = !this.settings
+        .hideHabitsCompletedToday;
+      this.settings.hideHabitsCompletedToday = !this.settings
+        .hideHabitsCompletedToday;
       this.reloads.table += 1;
       localStorage.setItem("habits", JSON.stringify(this.habits));
       localStorage.setItem("tasks", JSON.stringify(this.tasks));
@@ -761,6 +772,7 @@ export default {
         this.settings.markStartDay = false;
         this.settings.showCellDate = false;
         this.settings.hideCompletedHabits = false;
+        this.settings.hideHabitsCompletedToday = false;
         this.settings.hideCompletedTasks = false;
         this.settings.sortTasksByDeadline = false;
         this.settings.startMonthAgo = false;
@@ -923,6 +935,15 @@ export default {
   computed: {
     filteredHabits: function() {
       if (this.settings.hideCompletedHabits) {
+        return this.habits.filter(
+          (habit) =>
+            !this.wasCompletedDuringLastDays(
+              habit,
+              this.dateToYYYYMMDD(new Date())
+            )
+        );
+      }
+      if (this.settings.hideHabitsCompletedToday) {
         return this.habits.filter((habit) => !this.completedToday(habit));
       }
       return this.habits;
