@@ -454,7 +454,6 @@ export default {
     },
   }),
   methods: {
-    //ignoredWeekdays: [0, 4, 5, 6],
     getIgnoredWeekdaysFromForm() {
       let i = 0;
       let result = [];
@@ -472,7 +471,6 @@ export default {
         }
         i += 1;
       }
-      console.warn(result);
       return result;
     },
     doesHabitUseWeekdayFromDate(habit, date) {
@@ -589,7 +587,6 @@ export default {
     },
     timeLeft(deadline) {
       let date = new Date(this.dateToYYYYMMDD(new Date()));
-      //let today = new Date(date.valueOf());
       let deadlineDate = new Date(this.dateToYYYYMMDD(deadline));
       let timeLeft = 0;
       if (date < deadlineDate) {
@@ -615,10 +612,7 @@ export default {
       }
     },
     measureScrollbarWidth() {
-      // Add temporary box to wrapper
       let scrollbox = document.createElement("div");
-
-      // Make box scrollable
       scrollbox.style.overflow = "scroll";
 
       // Append box to document
@@ -626,8 +620,6 @@ export default {
 
       // Measure inner width of box
       let scrollBarWidth = scrollbox.offsetWidth - scrollbox.clientWidth;
-
-      // Remove box
       document.body.removeChild(scrollbox);
       return scrollBarWidth;
     },
@@ -840,9 +832,6 @@ export default {
         property = property.substr(1);
       }
       return function(a, b) {
-        /* next line works with strings and numbers,
-         * and you may want to customize it to your needs
-         */
         var result =
           a[property] < b[property] ? -1 : a[property] > b[property] ? 1 : 0;
         return result * sortOrder;
@@ -1084,6 +1073,10 @@ export default {
         return this.habits.filter(
           (habit) =>
             !this.wasCompletedDuringLastCheckedDays(
+              habit,
+              this.dateToYYYYMMDD(new Date())
+            ) &&
+            this.doesHabitUseWeekdayFromDate(
               habit,
               this.dateToYYYYMMDD(new Date())
             )
