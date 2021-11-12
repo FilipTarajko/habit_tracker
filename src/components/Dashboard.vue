@@ -99,54 +99,69 @@
             )"
             :key="'fd' + index"
           >
-            <div
-              v-if="habit.type == 'boolean'"
-              style="cursor: pointer;"
-              @click="changeBooleanStatus(habit, date)"
-              :class="
-                date == (habit.startDay + '').substring(0, 10) &&
-                settings.markStartDay
-                  ? 'firstDayOfHabitTableDiv'
-                  : ''
-              "
-            >
-              <v-icon :color="getBooleanHabitStateColor(habit, date)">{{
-                getBooleanHabitStateIcon(habit, date)
-              }}</v-icon>
-              <span v-if="settings.showCellDate" style="font-size:12px;">{{
-                date.substr(5, 5)
-              }}</span>
-            </div>
+            <span v-if="settings.showCellDate" style="font-size:12px;">{{
+              date.substr(5, 5)
+            }}</span>
+            <span v-if="settings.displayWeekday" style="user-select: none;">
+              <span
+                v-if="settings.showCellWeekday || true"
+                style="font-size:12px;"
+                >{{ new Date(date).getDay() }}</span
+              >
+              <span
+                v-if="doesHabitUseWeekdayFromDate(habit, date)"
+                style="font-size:12px; color: green;"
+                >+</span
+              >
+              <span
+                v-if="!doesHabitUseWeekdayFromDate(habit, date)"
+                style="font-size:12px; color: red;"
+                >-</span
+              >
+            </span>
+            <span v-if="doesHabitUseWeekdayFromDate(habit, date)">
+              <div
+                v-if="habit.type == 'boolean'"
+                style="cursor: pointer;"
+                @click="changeBooleanStatus(habit, date)"
+                :class="
+                  date == (habit.startDay + '').substring(0, 10) &&
+                  settings.markStartDay
+                    ? 'firstDayOfHabitTableDiv'
+                    : ''
+                "
+              >
+                <v-icon :color="getBooleanHabitStateColor(habit, date)">{{
+                  getBooleanHabitStateIcon(habit, date)
+                }}</v-icon>
+              </div>
 
-            <div
-              v-if="habit.type == 'numeric'"
-              style="cursor: pointer;"
-              @click="changeNumericStatus(habit, date)"
-              :class="
-                date == (habit.startDay + '').substring(0, 10) &&
-                settings.markStartDay
-                  ? 'firstDayOfHabitTableDiv'
-                  : ''
-              "
-            >
-              <span v-if="settings.showCellDate" style="font-size:12px;">{{
-                date.substr(5, 5)
-              }}</span>
-              <span :style="getNumericHabitStateStyle(habit, date)">
-                {{
-                  habit.records[date]
-                    ? date in habit.records && habit.records[date]
-                    : 0
-                }}
-              </span>
-            </div>
-            <div v-if="new Date(date) > new Date()"></div>
+              <div
+                v-if="habit.type == 'numeric'"
+                style="cursor: pointer;"
+                @click="changeNumericStatus(habit, date)"
+                :class="
+                  date == (habit.startDay + '').substring(0, 10) &&
+                  settings.markStartDay
+                    ? 'firstDayOfHabitTableDiv'
+                    : ''
+                "
+              >
+                <span :style="getNumericHabitStateStyle(habit, date)">
+                  {{
+                    habit.records[date]
+                      ? date in habit.records && habit.records[date]
+                      : 0
+                  }}
+                </span>
+              </div>
+            </span>
           </td>
         </tr>
       </tbody>
     </table>
     <div v-if="this.loaded" id="settingsDiv">
-      <div>Adding</div>
+      <div><b>Adding</b></div>
       <!-- add a new task -->
       <v-container>
         <v-row>
@@ -232,8 +247,30 @@
             >add habit</v-btn
           >
         </v-row>
+        <br />
+        days for new habit
+        <v-row style="margin-top: 0px;">
+          <span
+            style="margin: 4px 8px 4px;"
+            v-for="weekday in [
+              'monday',
+              'tuesday',
+              'wednesday',
+              'thursday',
+              'friday',
+              'saturday',
+              'sunday',
+            ]"
+            :key="weekday"
+          >
+            <v-checkbox
+              v-model="useWeekdays[weekday]"
+              :label="weekday.substr(0, 3)"
+            ></v-checkbox>
+          </span>
+        </v-row>
       </v-container>
-      Browsing<br /><br />
+      <b>Browsing</b><br /><br />
       <!-- days ago -->
       <v-slider
         v-model="settings.daysAgo"
@@ -287,7 +324,7 @@
           ></v-switch>
         </v-row>
       </v-container>
-      Visual preferences
+      <b>Visual preferences</b>
       <br /><br />
       <v-container
         ><v-row>
@@ -321,7 +358,7 @@
         swatches-max-height="200"
         @input="updateColor"
       ></v-color-picker>
-      <br />Debug<br /><br />
+      <br /><b>Debug</b><br /><br />
       <v-container>
         <v-row>
           <!-- show cell date -->
@@ -343,6 +380,13 @@
             class="settingsSwitch"
             v-model="settings.startMonthAgo"
             label="Start new habits 1 month ago"
+            @change="updateSettings"
+          ></v-switch>
+          <!-- show habit weekday and whether used -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.displayWeekday"
+            label="Display weekday and whether used"
             @change="updateSettings"
           ></v-switch>
         </v-row>
@@ -387,6 +431,15 @@
 <script>
 export default {
   data: () => ({
+    useWeekdays: {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: true,
+      sunday: true,
+    },
     newTaskDate: null,
     newTaskDatePickerMenu: null,
     habitDetailsDialog: false,
@@ -401,7 +454,38 @@ export default {
     },
   }),
   methods: {
-    wasCompletedDuringLastDays(habit, date) {
+    //ignoredWeekdays: [0, 4, 5, 6],
+    getIgnoredWeekdaysFromForm() {
+      let i = 0;
+      let result = [];
+      for (let weekday of [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+      ]) {
+        if (!this.useWeekdays[weekday]) {
+          result.push(i);
+        }
+        i += 1;
+      }
+      console.warn(result);
+      return result;
+    },
+    doesHabitUseWeekdayFromDate(habit, date) {
+      if ("ignoredWeekdays" in habit) {
+        if (habit.ignoredWeekdays.includes(new Date(date).getDay())) {
+          return false;
+        } else {
+          return true;
+        }
+      }
+      return true;
+    },
+    wasCompletedDuringLastCheckedDays(habit, date) {
       let days = habit.everyNthTime || 1;
       let iteratedDate = new Date(date);
       let back = 0;
@@ -413,7 +497,9 @@ export default {
           ) {
             return true;
           }
-          back += 1;
+          if (this.doesHabitUseWeekdayFromDate(habit, iteratedDate)) {
+            back += 1;
+          }
           iteratedDate.setDate(new Date(iteratedDate).getDate() - 1);
         }
       } else if (habit.type == "numeric") {
@@ -424,7 +510,9 @@ export default {
           ) {
             return true;
           }
-          back += 1;
+          if (this.doesHabitUseWeekdayFromDate(habit, iteratedDate)) {
+            back += 1;
+          }
           iteratedDate.setDate(new Date(iteratedDate).getDate() - 1);
         }
       }
@@ -440,7 +528,7 @@ export default {
           style += "green";
         }
       } else {
-        if (this.wasCompletedDuringLastDays(habit, date)) {
+        if (this.wasCompletedDuringLastCheckedDays(habit, date)) {
           style += "#333";
         } else {
           style += "red";
@@ -452,7 +540,7 @@ export default {
     },
     getBooleanHabitStateColor(habit, date) {
       if (!(date in habit.records)) {
-        if (this.wasCompletedDuringLastDays(habit, date)) {
+        if (this.wasCompletedDuringLastCheckedDays(habit, date)) {
           return "#333";
         } else {
           return "#444444";
@@ -462,7 +550,7 @@ export default {
         return this.settings.blueGreen ? "blue darken-1" : "green darken-2";
       }
       if (date in habit.records && !habit.records[date]) {
-        if (this.wasCompletedDuringLastDays(habit, date)) {
+        if (this.wasCompletedDuringLastCheckedDays(habit, date)) {
           return "#333";
         } else {
           return "red darken-2";
@@ -471,7 +559,7 @@ export default {
     },
     getBooleanHabitStateIcon(habit, date) {
       if (!(date in habit.records)) {
-        if (this.wasCompletedDuringLastDays(habit, date)) {
+        if (this.wasCompletedDuringLastCheckedDays(habit, date)) {
           return "mdi-shield-check-outline";
         }
         // help / checkbox-blank-outline / square-outline / square-rounded-outline ... might be better?
@@ -481,7 +569,7 @@ export default {
         return this.settings.useThick ? "mdi-check-bold" : "mdi-check";
       }
       if (date in habit.records && !habit.records[date]) {
-        if (this.wasCompletedDuringLastDays(habit, date)) {
+        if (this.wasCompletedDuringLastCheckedDays(habit, date)) {
           return "mdi-shield-check-outline";
         }
         return this.settings.useThick ? "mdi-close-thick" : "mdi-window-close";
@@ -679,6 +767,7 @@ export default {
         everyNthTime: document.getElementById(
           "newBooleanHabitEveryNthTimeInput"
         ).value,
+        ignoredWeekdays: this.getIgnoredWeekdaysFromForm(),
       });
       this.refreshAndUpdate();
     },
@@ -700,6 +789,7 @@ export default {
         everyNthTime: document.getElementById(
           "newNumericHabitEveryNthTimeInput"
         ).value,
+        ignoredWeekdays: this.getIgnoredWeekdaysFromForm(),
       });
       this.refreshAndUpdate();
     },
@@ -776,6 +866,7 @@ export default {
         this.settings.hideCompletedTasks = false;
         this.settings.sortTasksByDeadline = false;
         this.settings.startMonthAgo = false;
+        this.settings.displayWeekday = false;
       }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
@@ -847,6 +938,61 @@ export default {
             },
             type: "numeric",
             everyNthTime: 2,
+          },
+          {
+            name: "not on fridays",
+            startDay: new Date("2021-11-06"),
+            dailyTarget: 2,
+            ignoredWeekdays: [5],
+            records: {
+              "2021-11-06": 1,
+              "2021-11-07": 2,
+              "2021-11-08": 1,
+            },
+            type: "numeric",
+            everyNthTime: 2,
+          },
+          {
+            name: "only mon-wed",
+            startDay: new Date("2021-11-01"),
+            dailyTarget: 2,
+            ignoredWeekdays: [0, 4, 5, 6],
+            records: {
+              "2021-11-06": 1,
+              "2021-11-07": 2,
+              "2021-11-08": 1,
+            },
+            type: "numeric",
+            everyNthTime: 2,
+          },
+          {
+            name: "only mon-wed-fri-sun",
+            startDay: new Date("2021-11-01"),
+            dailyTarget: 2,
+            ignoredWeekdays: [2, 4, 6],
+            records: {
+              "2021-11-06": 1,
+              "2021-11-07": 2,
+              "2021-11-08": 1,
+            },
+            type: "numeric",
+            everyNthTime: 2,
+          },
+          {
+            name: "only mon-wed-fri-sun",
+            startDay: new Date("2021-11-01"),
+            ignoredWeekdays: [2, 4, 6],
+            records: {},
+            type: "boolean",
+            everyNthTime: 2,
+          },
+          {
+            name: "only mon-wed-fri-sun 3",
+            startDay: new Date("2021-11-01"),
+            ignoredWeekdays: [2, 4, 6],
+            records: {},
+            type: "boolean",
+            everyNthTime: 3,
           }
         );
       }
@@ -937,7 +1083,7 @@ export default {
       if (this.settings.hideCompletedHabits) {
         return this.habits.filter(
           (habit) =>
-            !this.wasCompletedDuringLastDays(
+            !this.wasCompletedDuringLastCheckedDays(
               habit,
               this.dateToYYYYMMDD(new Date())
             )
