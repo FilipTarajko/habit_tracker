@@ -4,8 +4,8 @@
       <div style="font-size: 32px;">Habits</div>
     </v-app-bar>
 
-    <v-main>
-      <Dashboard />
+    <v-main id="main" :class="darkMode ? 'dark' : ''">
+      <Dashboard v-model="darkMode" />
     </v-main>
   </v-app>
 </template>
@@ -21,7 +21,13 @@ export default {
   },
 
   data: () => ({
-    //
+    darkMode: false,
   }),
 };
 </script>
+
+<style scoped>
+#main.dark {
+  background: #252526;
+}
+</style>

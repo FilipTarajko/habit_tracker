@@ -1,5 +1,5 @@
 <template>
-  <div id="content">
+  <div id="content" :class="settings.darkMode ? 'dark' : ''">
     <table
       v-if="loaded"
       class="styled-table"
@@ -348,8 +348,16 @@
             v-model="settings.useBold"
             label="Use bold numbers"
             @change="updateSettings"
-          ></v-switch> </v-row
-      ></v-container>
+          ></v-switch>
+          <!-- dark mode -->
+          <v-switch
+            class="settingsSwitch"
+            v-model="settings.darkMode"
+            label="Dark mode"
+            @change="updateSettings"
+          ></v-switch>
+        </v-row>
+      </v-container>
       <br />
       <!-- accent color -->
       <v-color-picker
@@ -856,6 +864,7 @@ export default {
         this.settings.sortTasksByDeadline = false;
         this.settings.startMonthAgo = false;
         this.settings.displayWeekday = false;
+        this.settings.darkMode = false;
       }
       let storedHabits = localStorage.getItem("habits");
       if (storedHabits) {
@@ -1060,6 +1069,9 @@ export default {
       // console.log(dates);
       return dates;
     },
+    sendDarkModeStateToParent: function(value) {
+      this.$emit("input", value);
+    },
   },
   mounted() {
     this.loadData();
@@ -1067,7 +1079,16 @@ export default {
     window.onresize = this.updateWindowSize;
     //console.log(JSON.stringify(this.habits));
   },
+  watch: {
+    isDarkModeOn() {
+      console.log(this.isDarkModeOn);
+      this.sendDarkModeStateToParent(this.isDarkModeOn);
+    },
+  },
   computed: {
+    isDarkModeOn: function() {
+      return this.settings.darkMode;
+    },
     filteredHabits: function() {
       if (this.settings.hideCompletedHabits) {
         return this.habits.filter(
@@ -1126,6 +1147,16 @@ export default {
   --line-between-table-rows-color: #dddddd;
   --table-header-text-color: #ffffff;
   transform-origin: 50vw 0vh;
+}
+
+#content.dark {
+  --saturation: 73%;
+  --value: 50%;
+  --value-light: 82%;
+  --odd-table-row-background-color: #cccccc;
+  --even-table-row-background-color: #c3c3c3;
+  --line-between-table-rows-color: #aaaaaa;
+  --table-header-text-color: #dddddd;
 }
 
 #settingsDiv {
