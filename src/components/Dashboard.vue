@@ -399,6 +399,23 @@
           ></v-switch>
         </v-row>
       </v-container>
+
+      <v-btn color="orange" @click="uploadAllData()">
+        Upload
+        <v-icon right dark>
+          mdi-cloud-upload
+        </v-icon>
+      </v-btn>
+      <v-btn
+        color="green"
+        @click="downloadAllData()"
+        style="margin-left: 12px;"
+      >
+        download
+        <v-icon right dark>
+          mdi-cloud-download
+        </v-icon>
+      </v-btn>
     </div>
     <!-- HABIT DETAILS V-DIALOG -->
     <v-dialog v-model="habitDetailsDialog" width="min(80%, 600px)">
@@ -437,6 +454,8 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   data: () => ({
     useWeekdays: {
@@ -462,6 +481,33 @@ export default {
     },
   }),
   methods: {
+    async downloadAllData() {
+      console.log("downloading all data");
+      this.loaded = false;
+      let result = await axios.get("http://localhost:5000/");
+      let data = result.data;
+      this.habits = data.habits;
+      this.tasks = data.tasks;
+      this.settings = data.settings;
+      this.updateColor();
+      this.loaded = true;
+      console.log("downloaded all data");
+    },
+    async uploadAllData() {
+      console.log("uploading all data");
+      let data = {
+        habits: this.habits,
+        tasks: this.tasks,
+        settings: this.settings,
+      };
+      let stringified = JSON.stringify(data);
+      await axios.post("http://localhost:5000/", stringified, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("uploaded all data");
+    },
     getIgnoredWeekdaysFromForm() {
       let i = 0;
       let result = [];
@@ -849,6 +895,7 @@ export default {
       let storedSettings = localStorage.getItem("settings");
       if (storedSettings) {
         this.settings = JSON.parse(storedSettings);
+        this.updateColor();
       } else {
         this.settings.color = "#123456";
         this.settings.blueGreen = false;
