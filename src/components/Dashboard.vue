@@ -400,7 +400,13 @@
         </v-row>
       </v-container>
 
-      <v-btn color="orange" @click="uploadAllData()">
+      <v-btn
+        color="orange"
+        class="ma-2 white--text"
+        :disabled="transferringData"
+        :loading="uploadingData"
+        @click="uploadAllData()"
+      >
         Upload
         <v-icon right dark>
           mdi-cloud-upload
@@ -408,6 +414,9 @@
       </v-btn>
       <v-btn
         color="green"
+        class="ma-2 white--text"
+        :disabled="transferringData"
+        :loading="downloadingData"
         @click="downloadAllData()"
         style="margin-left: 12px;"
       >
@@ -479,9 +488,14 @@ export default {
     reloads: {
       table: 1,
     },
+    downloadingData: false,
+    uploadingData: false,
+    transferringData: false,
   }),
   methods: {
     async downloadAllData() {
+      this.downloadingData = true;
+      this.transferringData = true;
       console.log("downloading all data");
       this.loaded = false;
       let result = await axios.get("http://localhost:5000/");
@@ -491,9 +505,13 @@ export default {
       this.settings = data.settings;
       this.updateColor();
       this.loaded = true;
+      this.downloadingData = false;
+      this.transferringData = false;
       console.log("downloaded all data");
     },
     async uploadAllData() {
+      this.uploadingData = true;
+      this.transferringData = true;
       console.log("uploading all data");
       let data = {
         habits: this.habits,
@@ -506,6 +524,8 @@ export default {
           "Content-Type": "application/json",
         },
       });
+      this.uploadingData = false;
+      this.transferringData = false;
       console.log("uploaded all data");
     },
     getIgnoredWeekdaysFromForm() {
