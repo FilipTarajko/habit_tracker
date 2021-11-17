@@ -1,5 +1,72 @@
 <template>
   <div id="content" :class="settings.darkMode ? 'dark' : ''">
+    <div id="accountDiv" style="border: 1px solid black; margin-top: 16px;">
+      <div v-if="!token">
+        REGISTER OR LOGIN
+        <v-text-field
+          label="name"
+          v-model="userData.name"
+          persistent-hint
+        ></v-text-field>
+        <v-text-field
+          label="password"
+          v-model="userData.password"
+          persistent-hint
+          @click:append="showPassword = !showPassword"
+          :type="showPassword ? 'text' : 'password'"
+          :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+        ></v-text-field>
+        <v-btn
+          @click="tryToRegister"
+          style="margin-top: 16px; margin-left: 16px; color: blue;"
+          >register</v-btn
+        >
+        <v-btn
+          @click="tryToLogin"
+          style="margin-top: 16px; margin-left: 16px; color: green;"
+          >log in</v-btn
+        >
+      </div>
+      <div v-if="token">
+        <v-btn
+          @click="uploadData"
+          color="orange"
+          class="ma-2 white--text"
+          :disabled="transferringData"
+          :loading="uploadingData"
+          style="margin-top: 16px; margin-left: 16px;"
+          >upload data
+          <v-icon right dark>
+            mdi-cloud-upload
+          </v-icon></v-btn
+        >
+        <v-btn
+          @click="downloadData"
+          color="green"
+          class="ma-2 white--text"
+          :disabled="transferringData"
+          :loading="downloadingData"
+          style="margin-top: 16px; margin-left: 16px;"
+          >download data
+          <v-icon right dark>
+            mdi-cloud-download
+          </v-icon></v-btn
+        >
+        <v-btn
+          @click="token = ''"
+          color="red"
+          class="ma-2 white--text"
+          style="margin-top: 16px; margin-left: 16px;"
+          >log out
+          <v-icon right dark>
+            mdi-logout
+          </v-icon></v-btn
+        >
+        <!-- <br />
+        <b>token:</b>
+        <div style="overflow-wrap: break-word;">{{ token }}</div> -->
+      </div>
+    </div>
     <table
       v-if="loaded"
       class="styled-table"
@@ -399,32 +466,36 @@
           ></v-switch>
         </v-row>
       </v-container>
-
-      <v-btn
-        color="orange"
-        class="ma-2 white--text"
-        :disabled="transferringData"
-        :loading="uploadingData"
-        @click="uploadAllData()"
-      >
-        Upload
-        <v-icon right dark>
-          mdi-cloud-upload
-        </v-icon>
-      </v-btn>
-      <v-btn
-        color="green"
-        class="ma-2 white--text"
-        :disabled="transferringData"
-        :loading="downloadingData"
-        @click="downloadAllData()"
-        style="margin-left: 12px;"
-      >
-        download
-        <v-icon right dark>
-          mdi-cloud-download
-        </v-icon>
-      </v-btn>
+      <!-- <v-container>
+        <b>local</b>
+        <v-row>
+          <v-btn
+            color="orange"
+            class="ma-2 white--text"
+            :disabled="transferringData"
+            :loading="uploadingData"
+            @click="uploadAllData()"
+          >
+            Upload
+            <v-icon right dark>
+              mdi-cloud-upload
+            </v-icon>
+          </v-btn>
+          <v-btn
+            color="green"
+            class="ma-2 white--text"
+            :disabled="transferringData"
+            :loading="downloadingData"
+            @click="downloadAllData()"
+            style="margin-left: 12px;"
+          >
+            download
+            <v-icon right dark>
+              mdi-cloud-download
+            </v-icon>
+          </v-btn>
+        </v-row>
+      </v-container> -->
     </div>
     <!-- HABIT DETAILS V-DIALOG -->
     <v-dialog v-model="habitDetailsDialog" width="min(80%, 600px)">
@@ -467,6 +538,9 @@ import axios from "axios";
 
 export default {
   data: () => ({
+    useServer: true,
+    serverIp: "https://fthabitsbackend.herokuapp.com/",
+    localIp: "http://localhost:5000/",
     useWeekdays: {
       monday: true,
       tuesday: true,
@@ -491,42 +565,94 @@ export default {
     downloadingData: false,
     uploadingData: false,
     transferringData: false,
+    userData: {
+      password: "",
+      name: "",
+    },
+    showPassword: false,
+    token: "",
   }),
   methods: {
-    async downloadAllData() {
+    async downloadData() {
       this.downloadingData = true;
       this.transferringData = true;
-      console.log("downloading all data");
-      this.loaded = false;
-      let result = await axios.get("http://localhost:5000/");
-      let data = result.data;
-      this.habits = data.habits;
-      this.tasks = data.tasks;
-      this.settings = data.settings;
-      this.updateColor();
-      this.loaded = true;
-      this.downloadingData = false;
-      this.transferringData = false;
-      console.log("downloaded all data");
-    },
-    async uploadAllData() {
-      this.uploadingData = true;
-      this.transferringData = true;
-      console.log("uploading all data");
-      let data = {
-        habits: this.habits,
-        tasks: this.tasks,
-        settings: this.settings,
-      };
-      let stringified = JSON.stringify(data);
-      await axios.post("http://localhost:5000/", stringified, {
+      let response = await axios.get(this.ipForRequests + "api/data", {
         headers: {
           "Content-Type": "application/json",
+          Authorization: "Bearer " + this.token,
         },
       });
-      this.uploadingData = false;
+      console.log(response.data);
+      let data = response.data;
+      for (var i = 0; i < data.habits.length; i++) {
+        if (!("records" in data.habits[i])) {
+          data.habits[i].records = [];
+        }
+      }
+      console.log(data);
+      this.habits = data.habits;
+      this.settings = data.settings;
+      this.tasks = data.tasks;
+      this.refreshAndUpdate();
+      this.updateColor();
       this.transferringData = false;
-      console.log("uploaded all data");
+      this.downloadingData = false;
+    },
+    async uploadData() {
+      this.transferringData = true;
+      this.uploadingData = true;
+      let response = await axios.post(
+        this.ipForRequests + "api/data",
+        JSON.stringify({
+          habits: this.habits,
+          settings: this.settings,
+          tasks: this.tasks,
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + this.token,
+          },
+        }
+      );
+      console.log(response);
+      this.transferringData = false;
+      this.uploadingData = false;
+    },
+    async tryToRegister() {
+      this.transferringData = true;
+      let response = await axios.post(
+        this.ipForRequests + "api/register",
+        JSON.stringify(this.userData),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(response);
+      alert(response.data);
+      this.transferringData = false;
+    },
+    async tryToLogin() {
+      this.transferringData = true;
+      let response = await axios.post(
+        this.ipForRequests + "api/login",
+        JSON.stringify(this.userData),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response.data.length > 40) {
+        this.token = response.data;
+      } else {
+        alert(response.data);
+        this.token = "";
+      }
+      this.transferringData = false;
+      localStorage.setItem("token", this.token);
     },
     getIgnoredWeekdaysFromForm() {
       let i = 0;
@@ -912,6 +1038,7 @@ export default {
       };
     },
     loadData: function() {
+      this.token = localStorage.getItem("token");
       let storedSettings = localStorage.getItem("settings");
       if (storedSettings) {
         this.settings = JSON.parse(storedSettings);
@@ -1153,6 +1280,13 @@ export default {
     },
   },
   computed: {
+    ipForRequests: function() {
+      if (this.useServer) {
+        return this.serverIp;
+      } else {
+        return this.localIp;
+      }
+    },
     isDarkModeOn: function() {
       return this.settings.darkMode;
     },
@@ -1224,6 +1358,16 @@ export default {
   --even-table-row-background-color: #c3c3c3;
   --line-between-table-rows-color: #aaaaaa;
   --table-header-text-color: #dddddd;
+}
+
+#accountDiv {
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px;
+  border: 1px solid var(--accent-color);
+  border-radius: 12px;
+  background: var(--accent-color-light);
 }
 
 #settingsDiv {
