@@ -1086,120 +1086,126 @@ export default {
         this.updateColor();
       } else {
         console.warn("no data found in localstorage!");
-        this.habits.push(
-          {
-            name: "powygrzewać się na słoneczku",
-            startDay: new Date("2021-10-12"),
-            records: {
-              "2021-10-12": true,
-              "2021-10-15": true,
-              "2021-10-17": true,
-              "2021-10-18": false,
-            },
-            type: "boolean",
-          },
-          {
-            name: "wejść w pudełko",
-            startDay: new Date("2021-10-13"),
-            records: {
-              "2021-10-13": true,
-              "2021-10-14": true,
-              "2021-10-15": true,
-            },
-            type: "boolean",
-          },
-          {
-            name: "zjesc 3 puszki karmy",
-            startDay: new Date("2021-11-04"),
-            dailyTarget: 3,
-            records: {
-              "2021-11-04": 2,
-              "2021-11-05": 4,
-              "2021-11-06": 2,
-              "2021-11-07": 5,
-              "2021-11-08": 3,
-            },
-            type: "numeric",
-          },
-          {
-            name: "złapać 2 myszy",
-            startDay: new Date("2021-11-06"),
-            dailyTarget: 2,
-            records: {
-              "2021-11-06": 1,
-              "2021-11-07": 2,
-              "2021-11-08": 1,
-            },
-            type: "numeric",
-          },
-          {
-            name: "everyNthTime: 2",
-            startDay: new Date("2021-11-06"),
-            dailyTarget: 2,
-            records: {
-              "2021-11-06": 1,
-              "2021-11-07": 2,
-              "2021-11-08": 1,
-            },
-            type: "numeric",
-            everyNthTime: 2,
-          },
-          {
-            name: "not on fridays",
-            startDay: new Date("2021-11-06"),
-            dailyTarget: 2,
-            ignoredWeekdays: [5],
-            records: {
-              "2021-11-06": 1,
-              "2021-11-07": 2,
-              "2021-11-08": 1,
-            },
-            type: "numeric",
-            everyNthTime: 2,
-          },
-          {
-            name: "only mon-wed",
-            startDay: new Date("2021-11-01"),
-            dailyTarget: 2,
-            ignoredWeekdays: [0, 4, 5, 6],
-            records: {
-              "2021-11-06": 1,
-              "2021-11-07": 2,
-              "2021-11-08": 1,
-            },
-            type: "numeric",
-            everyNthTime: 2,
-          },
-          {
-            name: "only mon-wed-fri-sun",
-            startDay: new Date("2021-11-01"),
-            dailyTarget: 2,
-            ignoredWeekdays: [2, 4, 6],
-            records: {
-              "2021-11-06": 1,
-              "2021-11-07": 2,
-              "2021-11-08": 1,
-            },
-            type: "numeric",
-            everyNthTime: 2,
-          },
-          {
-            name: "only mon-wed-fri-sun",
-            startDay: new Date("2021-11-01"),
-            ignoredWeekdays: [2, 4, 6],
-            records: {},
-            type: "boolean",
-            everyNthTime: 2,
-          },
-          {
-            name: "only mon-wed-fri-sun 3",
-            startDay: new Date("2021-11-01"),
-            ignoredWeekdays: [2, 4, 6],
-            records: {},
-            type: "boolean",
-            everyNthTime: 3,
-          }
-        );
+        this.habits.push({
+          name: "your first habit!",
+          startDay: new Date(this.dateToYYYYMMDD(new Date())),
+          records: {},
+          type: "boolean",
+        });
+        // this.habits.push(
+        //   {
+        //     name: "powygrzewać się na słoneczku",
+        //     startDay: new Date("2021-10-12"),
+        //     records: {
+        //       "2021-10-12": true,
+        //       "2021-10-15": true,
+        //       "2021-10-17": true,
+        //       "2021-10-18": false,
+        //     },
+        //     type: "boolean",
+        //   },
+        //   {
+        //     name: "wejść w pudełko",
+        //     startDay: new Date("2021-10-13"),
+        //     records: {
+        //       "2021-10-13": true,
+        //       "2021-10-14": true,
+        //       "2021-10-15": true,
+        //     },
+        //     type: "boolean",
+        //   },
+        //   {
+        //     name: "zjesc 3 puszki karmy",
+        //     startDay: new Date("2021-11-04"),
+        //     dailyTarget: 3,
+        //     records: {
+        //       "2021-11-04": 2,
+        //       "2021-11-05": 4,
+        //       "2021-11-06": 2,
+        //       "2021-11-07": 5,
+        //       "2021-11-08": 3,
+        //     },
+        //     type: "numeric",
+        //   },
+        //   {
+        //     name: "złapać 2 myszy",
+        //     startDay: new Date("2021-11-06"),
+        //     dailyTarget: 2,
+        //     records: {
+        //       "2021-11-06": 1,
+        //       "2021-11-07": 2,
+        //       "2021-11-08": 1,
+        //     },
+        //     type: "numeric",
+        //   },
+        //   {
+        //     name: "everyNthTime: 2",
+        //     startDay: new Date("2021-11-06"),
+        //     dailyTarget: 2,
+        //     records: {
+        //       "2021-11-06": 1,
+        //       "2021-11-07": 2,
+        //       "2021-11-08": 1,
+        //     },
+        //     type: "numeric",
+        //     everyNthTime: 2,
+        //   },
+        //   {
+        //     name: "not on fridays",
+        //     startDay: new Date("2021-11-06"),
+        //     dailyTarget: 2,
+        //     ignoredWeekdays: [5],
+        //     records: {
+        //       "2021-11-06": 1,
+        //       "2021-11-07": 2,
+        //       "2021-11-08": 1,
+        //     },
+        //     type: "numeric",
+        //     everyNthTime: 2,
+        //   },
+        //   {
+        //     name: "only mon-wed",
+        //     startDay: new Date("2021-11-01"),
+        //     dailyTarget: 2,
+        //     ignoredWeekdays: [0, 4, 5, 6],
+        //     records: {
+        //       "2021-11-06": 1,
+        //       "2021-11-07": 2,
+        //       "2021-11-08": 1,
+        //     },
+        //     type: "numeric",
+        //     everyNthTime: 2,
+        //   },
+        //   {
+        //     name: "only mon-wed-fri-sun",
+        //     startDay: new Date("2021-11-01"),
+        //     dailyTarget: 2,
+        //     ignoredWeekdays: [2, 4, 6],
+        //     records: {
+        //       "2021-11-06": 1,
+        //       "2021-11-07": 2,
+        //       "2021-11-08": 1,
+        //     },
+        //     type: "numeric",
+        //     everyNthTime: 2,
+        //   },
+        //   {
+        //     name: "only mon-wed-fri-sun",
+        //     startDay: new Date("2021-11-01"),
+        //     ignoredWeekdays: [2, 4, 6],
+        //     records: {},
+        //     type: "boolean",
+        //     everyNthTime: 2,
+        //   },
+        //   {
+        //     name: "only mon-wed-fri-sun 3",
+        //     startDay: new Date("2021-11-01"),
+        //     ignoredWeekdays: [2, 4, 6],
+        //     records: {},
+        //     type: "boolean",
+        //     everyNthTime: 3,
+        //   }
+        // );
       }
       let storedTasks = localStorage.getItem("tasks");
       if (storedTasks) {
@@ -1212,38 +1218,44 @@ export default {
         // console.log("stringified from localData: ");
         // console.log(JSON.stringify(this.habits));
       } else {
-        this.tasks.push(
-          {
-            name: "zrobić HLA",
-            deadline: "2021-11-11",
-            dateCreated: "2021-11-07",
-            status: "todo",
-          },
-          {
-            name: "zrobić sprawozdanie elektro",
-            deadline: "2021-11-12",
-            dateCreated: "2021-11-08",
-            status: "todo",
-          },
-          {
-            name: "zrobić pd z matmy",
-            deadline: "2021-11-13",
-            dateCreated: "2021-11-09",
-            status: "todo",
-          },
-          {
-            name: "stare",
-            deadline: "2021-11-03",
-            dateCreated: "2021-11-09",
-            status: "todo",
-          },
-          {
-            name: "nowe",
-            deadline: "2021-11-16",
-            dateCreated: "2021-11-05",
-            status: "todo",
-          }
-        );
+        this.tasks.push({
+          name: "complete this task!",
+          deadline: this.dateToYYYYMMDD(new Date()),
+          dateCreated: this.dateToYYYYMMDD(new Date()),
+          status: "todo",
+        });
+        // this.tasks.push(
+        //   {
+        //     name: "zrobić HLA",
+        //     deadline: "2021-11-11",
+        //     dateCreated: "2021-11-07",
+        //     status: "todo",
+        //   },
+        //   {
+        //     name: "zrobić sprawozdanie elektro",
+        //     deadline: "2021-11-12",
+        //     dateCreated: "2021-11-08",
+        //     status: "todo",
+        //   },
+        //   {
+        //     name: "zrobić pd z matmy",
+        //     deadline: "2021-11-13",
+        //     dateCreated: "2021-11-09",
+        //     status: "todo",
+        //   },
+        //   {
+        //     name: "stare",
+        //     deadline: "2021-11-03",
+        //     dateCreated: "2021-11-09",
+        //     status: "todo",
+        //   },
+        //   {
+        //     name: "nowe",
+        //     deadline: "2021-11-16",
+        //     dateCreated: "2021-11-05",
+        //     status: "todo",
+        //   }
+        // );
         // console.log("pushed: ");
         // console.log(this.habits);
         // console.log("stringified pushed: ");
