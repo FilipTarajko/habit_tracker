@@ -18,13 +18,25 @@
         ></v-text-field>
         <v-btn
           @click="tryToRegister"
-          style="margin-top: 16px; margin-left: 16px; color: blue;"
-          >register</v-btn
-        >
+          color="blue"
+          class="ma-2 white--text"
+          :disabled="transferringData"
+          style="margin-top: 16px; margin-left: 16px;"
+          >register
+          <v-icon right dark>
+            mdi-account-plus
+          </v-icon>
+        </v-btn>
         <v-btn
           @click="tryToLogin"
-          style="margin-top: 16px; margin-left: 16px; color: green;"
-          >log in</v-btn
+          color="green"
+          class="ma-2 white--text"
+          :disabled="transferringData"
+          style="margin-top: 16px; margin-left: 16px;"
+          >log in
+          <v-icon right dark>
+            mdi-login
+          </v-icon></v-btn
         >
       </div>
       <div v-if="token">
