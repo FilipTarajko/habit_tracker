@@ -632,7 +632,8 @@ export default {
       );
       console.log(response);
       alert(response.data);
-      this.transferringData = false;
+      await this.tryToLogin();
+      await this.uploadData();
     },
     async tryToLogin() {
       this.transferringData = true;
