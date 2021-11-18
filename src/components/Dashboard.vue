@@ -353,8 +353,8 @@
       <!-- days ago -->
       <v-slider
         v-model="settings.daysAgo"
-        :max="this.getStartedDaysAgo() - settings.displayedDays + 2"
-        :min="0"
+        :max="this.getStartedDaysAgo()"
+        :min="-7"
         step="1"
         persistent-hint
         :label="'Days ago: ' + settings.daysAgo"
