@@ -2,11 +2,12 @@
   <div id="content" :class="settings.darkMode ? 'dark' : ''">
     <div id="accountDiv" style="border: 1px solid black; margin-top: 16px;">
       <div v-if="!token">
-        REGISTER OR LOGIN
+        Login or register to save your data in cloud!
         <v-text-field
           label="name"
           v-model="userData.name"
           persistent-hint
+          style="margin-bottom: -12px;"
         ></v-text-field>
         <v-text-field
           label="password"
@@ -80,7 +81,7 @@
       </div>
     </div>
     <table
-      v-if="loaded"
+      v-if="loaded && this.filteredTasks.length"
       class="styled-table"
       style="margin-left: auto; margin-right: auto;"
     >
@@ -96,27 +97,33 @@
         <tr
           v-for="(task, index) in filteredTasks"
           :key="index + 'B' + reloads.table"
-          class="widthControlledCell"
         >
-          <th>
+          <td @click="showTaskDetails(index)" style="cursor: pointer;">
             {{ task.name }}
-          </th>
-          <th>
+          </td>
+          <td class="widthControlledCell">
             {{ task.deadline }}
-          </th>
-          <th>
-            <span :style="getTaskColor(task)">{{
-              timeLeft(task.deadline)
-            }}</span>
-          </th>
-          <th
+          </td>
+          <td style="padding: 0;" class="widthControlledCell">
+            <div
+              :style="
+                getTaskColor(task) +
+                  'border-radius: 12px; margin-left: 24px; margin-right: 24px;'
+              "
+            >
+              {{ timeLeft(task.deadline) }}
+            </div>
+          </td>
+          <td
+            class="widthControlledCell"
             v-if="task.status == 'todo'"
             style="cursor: pointer;"
             @click="changeTaskStatus(task)"
           >
             <v-icon color="#444444">mdi-square-rounded-outline</v-icon>
-          </th>
-          <th
+          </td>
+          <td
+            class="widthControlledCell"
             v-if="task.status == 'done'"
             style="cursor: pointer;"
             @click="changeTaskStatus(task)"
@@ -125,12 +132,12 @@
               :color="settings.blueGreen ? 'blue darken-1' : 'green darken-2'"
               >{{ settings.useThick ? "mdi-check-bold" : "mdi-check" }}</v-icon
             >
-          </th>
+          </td>
         </tr>
       </tbody>
     </table>
     <table
-      v-if="loaded"
+      v-if="loaded && this.filteredHabits.length"
       class="styled-table"
       style="margin-left: auto; margin-right: auto;"
     >
@@ -239,6 +246,13 @@
         </tr>
       </tbody>
     </table>
+    <div
+      v-if="!(this.filteredHabits.length || this.filteredTasks.length)"
+      class="panelDiv"
+      style="margin-top: 16px; margin-bottom: 16px; text-align: center; font-size: 1.8rem;"
+    >
+      There is nothing to do now! Add a new task, a new habit, or take a break!
+    </div>
     <div v-if="this.loaded" id="settingsDiv">
       <div><b>Adding</b></div>
       <!-- add a new task -->
@@ -517,7 +531,6 @@
             this.habitDetailsDialog ? this.habits[displayedHabitId].name : ""
           }}
           <v-icon
-            v-if="this.habits.length > 1"
             color="red"
             style="position: absolute; right: 20px; cursor: pointer;"
             @click="deleteHabit"
@@ -533,12 +546,55 @@
               : ""
           }}
           <br />
-          dni z rzędu: {{ getDaysInARow(displayedHabitId) }} <br />
-          type: {{ this.habits[displayedHabitId].type }}
-          <span v-if="this.habits[displayedHabitId].type == 'numeric'">
+          dni z rzędu:
+          {{ this.habitDetailsDialog ? getDaysInARow(displayedHabitId) : "" }}
+          <br />
+          type:
+          {{
+            this.habitDetailsDialog ? this.habits[displayedHabitId].type : ""
+          }}
+          <span
+            v-if="
+              this.habitDetailsDialog &&
+                this.habits[displayedHabitId].type == 'numeric'
+            "
+          >
             <br />
             daily target: {{ this.habits[displayedHabitId].dailyTarget }}
           </span>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-- TASK DETAILS V-DIALOG -->
+    <v-dialog v-model="taskDetailsDialog" width="min(80%, 600px)">
+      <v-card v-if="loaded">
+        <v-card-title class="text-h5 grey lighten-2">
+          {{ this.taskDetailsDialog ? this.tasks[displayedTaskId].name : "" }}
+          <v-icon
+            color="red"
+            style="position: absolute; right: 20px; cursor: pointer;"
+            @click="deleteTask"
+            >mdi-delete</v-icon
+          >
+        </v-card-title>
+
+        <v-card-text style="margin-top: 16px;">
+          deadline:
+          {{
+            this.taskDetailsDialog
+              ? dateToYYYYMMDD(this.tasks[displayedTaskId].deadline)
+              : ""
+          }}
+          <br />
+          czas dodania:
+          {{
+            this.taskDetailsDialog
+              ? dateToYYYYMMDD(this.tasks[displayedTaskId].dateCreated)
+              : ""
+          }}
+          <br />
+          status:
+          {{ this.taskDetailsDialog ? this.tasks[displayedTaskId].status : "" }}
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -565,10 +621,12 @@ export default {
     newTaskDate: null,
     newTaskDatePickerMenu: null,
     habitDetailsDialog: false,
+    taskDetailsDialog: false,
     loaded: false,
     habits: [],
     tasks: [],
     displayedHabitId: 0,
+    displayedTaskId: 0,
     currentDate: new Date(),
     settings: {},
     reloads: {
@@ -925,12 +983,21 @@ export default {
       this.habitDetailsDialog = false;
       this.refreshAndUpdate();
     },
+    deleteTask: function() {
+      this.tasks.splice(this.displayedTaskId, 1);
+      this.taskDetailsDialog = false;
+      this.refreshAndUpdate();
+    },
     dateToYYYYMMDD: function(date) {
       return new Date(date).toISOString().substring(0, 10);
     },
     showHabitDetails: function(habitIndex) {
       this.displayedHabitId = habitIndex;
       this.habitDetailsDialog = true;
+    },
+    showTaskDetails: function(taskIndex) {
+      this.displayedTaskId = taskIndex;
+      this.taskDetailsDialog = true;
     },
     getDaysInARow: function(habitIndex) {
       let habit = this.habits[habitIndex];
@@ -949,8 +1016,8 @@ export default {
     },
     addNewTask: function() {
       this.tasks.push({
-        name: document.getElementById("newTaskNameInput").value,
-        deadline: this.newTaskDate,
+        name: document.getElementById("newTaskNameInput").value || "task",
+        deadline: this.newTaskDate || this.dateToYYYYMMDD(new Date()),
         status: "todo",
         dateCreated: this.dateToYYYYMMDD(new Date()),
       });
@@ -1386,6 +1453,16 @@ export default {
 }
 
 #accountDiv {
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 20px;
+  border: 1px solid var(--accent-color);
+  border-radius: 12px;
+  background: var(--accent-color-light);
+}
+
+.panelDiv {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
