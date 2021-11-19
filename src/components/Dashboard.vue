@@ -23,7 +23,7 @@
           class="ma-2 white--text"
           :disabled="transferringData"
           style="margin-top: 16px; margin-left: 16px;"
-          >register
+          >{{ $t("buttons.register") }}
           <v-icon right dark>
             mdi-account-plus
           </v-icon>
@@ -34,7 +34,7 @@
           class="ma-2 white--text"
           :disabled="transferringData"
           style="margin-top: 16px; margin-left: 16px;"
-          >log in
+          >{{ $t("buttons.logIn") }}
           <v-icon right dark>
             mdi-login
           </v-icon></v-btn
@@ -48,7 +48,7 @@
           :disabled="transferringData"
           :loading="uploadingData"
           style="margin-top: 16px; margin-left: 16px;"
-          >upload data
+          >{{ $t("buttons.uploadData") }}
           <v-icon right dark>
             mdi-cloud-upload
           </v-icon></v-btn
@@ -60,7 +60,7 @@
           :disabled="transferringData"
           :loading="downloadingData"
           style="margin-top: 16px; margin-left: 16px;"
-          >download data
+          >{{ $t("buttons.downloadData") }}
           <v-icon right dark>
             mdi-cloud-download
           </v-icon></v-btn
@@ -70,7 +70,7 @@
           color="red"
           class="ma-2 white--text"
           style="margin-top: 16px; margin-left: 16px;"
-          >log out
+          >{{ $t("buttons.logOut") }}
           <v-icon right dark>
             mdi-logout
           </v-icon></v-btn

@@ -1,3 +1,9 @@
 {
-  "message": "hello i18n !!"
+  "buttons": {
+    "register": "register",
+    "logIn": "log in",
+    "uploadData": "upload data",
+    "downloadData": "download data",
+    "logOut": "log out"
+  }
 }

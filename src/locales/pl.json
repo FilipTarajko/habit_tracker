@@ -1,0 +1,9 @@
+{
+  "buttons": {
+    "register": "zarejestruj",
+    "logIn": "zaloguj",
+    "uploadData": "zapisz",
+    "downloadData": "pobierz",
+    "logOut": "wyloguj"
+  }
+}
