@@ -42,20 +42,8 @@
       </div>
       <div v-if="token">
         <v-btn
-          @click="uploadData"
-          color="orange"
-          class="ma-2 white--text"
-          :disabled="transferringData"
-          :loading="uploadingData"
-          style="margin-top: 16px; margin-left: 16px;"
-          >{{ $t("buttons.uploadData") }}
-          <v-icon right dark>
-            mdi-cloud-upload
-          </v-icon></v-btn
-        >
-        <v-btn
           @click="downloadData"
-          color="green"
+          color="orange"
           class="ma-2 white--text"
           :disabled="transferringData"
           :loading="downloadingData"
@@ -63,6 +51,18 @@
           >{{ $t("buttons.downloadData") }}
           <v-icon right dark>
             mdi-cloud-download
+          </v-icon></v-btn
+        >
+        <v-btn
+          @click="uploadData"
+          color="green"
+          class="ma-2 white--text"
+          :disabled="transferringData"
+          :loading="uploadingData"
+          style="margin-top: 16px; margin-left: 16px;"
+          >{{ $t("buttons.uploadData") }}
+          <v-icon right dark>
+            mdi-cloud-upload
           </v-icon></v-btn
         >
         <v-btn
@@ -87,10 +87,12 @@
     >
       <thead>
         <tr>
-          <th class="widthControlledCell" style="width: 320px;">Task</th>
-          <th class="widthControlledCell">Deadline</th>
-          <th class="widthControlledCell">Time left</th>
-          <th class="widthControlledCell">Status</th>
+          <th class="widthControlledCell" style="width: 320px;">
+            {{ $t("tasks.task") }}
+          </th>
+          <th class="widthControlledCell">{{ $t("tasks.deadline") }}</th>
+          <th class="widthControlledCell">{{ $t("tasks.days left") }}</th>
+          <th class="widthControlledCell">{{ $t("tasks.status") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -459,6 +461,21 @@
         swatches-max-height="200"
         @input="updateColor"
       ></v-color-picker>
+      <br /><b>Language</b><br />
+      <!-- justify-content: flex-end; margin: auto 0 auto auto; -->
+      <div style="display: flex;">
+        <div
+          v-for="(language, index) in langs"
+          :key="index"
+          style="margin-top: 6px; margin-left: 12px;"
+        >
+          <img
+            style="width: 50px; height: 30px; border-radius: 6px; cursor:pointer;"
+            :src="require(`../assets/images/${language}.png`)"
+            @click="setLanguage(language)"
+          />
+        </div>
+      </div>
       <br /><b>Debug</b><br /><br />
       <v-container>
         <v-row>
@@ -641,8 +658,14 @@ export default {
     },
     showPassword: false,
     token: "",
+    langs: ["en", "pl", "de", "nl"],
   }),
   methods: {
+    setLanguage(language) {
+      this.$i18n.locale = language;
+      this.settings.language = language;
+      this.updateSettings();
+    },
     async downloadData() {
       this.downloadingData = true;
       this.transferringData = true;
@@ -665,6 +688,7 @@ export default {
       this.tasks = data.tasks;
       this.refreshAndUpdate();
       this.updateColor();
+      this.$i18n.locale = this.settings.language;
       this.transferringData = false;
       this.downloadingData = false;
     },

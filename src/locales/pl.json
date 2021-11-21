@@ -2,8 +2,15 @@
   "buttons": {
     "register": "zarejestruj",
     "logIn": "zaloguj",
-    "uploadData": "zapisz",
-    "downloadData": "pobierz",
-    "logOut": "wyloguj"
+    "uploadData": "zapisz dane",
+    "downloadData": "pobierz dane",
+    "logOut": "wyloguj się"
+  },
+  "tasks": {
+    "task": "zadanie",
+    "deadline": "termin",
+    "days left": "pozostałe dni",
+    "status": "status",
+    "tasks": "zadania"
   }
 }

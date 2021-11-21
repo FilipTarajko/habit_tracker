@@ -1,7 +1,7 @@
 {
   "buttons": {
-    "register": "register",
-    "logIn": "log in",
+    "register": "anmelden",
+    "logIn": "inloggen",
     "uploadData": "upload data",
     "downloadData": "download data",
     "logOut": "log out"
